@@ -90,6 +90,24 @@ if [ "$CVE_SEARCH_HOST" ]; then
 fi
 
 ################################################################################
+# Setup for FOSSology
+if [ "$FOSSOLOGY_HOST" ] && [ "$FOSSOLOGY_PORT" ]; then
+    echo "fossology.host = $FOSSOLOGY_HOST" > /etc/sw360/fossology.properties
+    echo "fossology.port = $FOSSOLOGY_PORT" >> /etc/sw360/fossology.properties
+    if [ "$FOSSOLOGY_USER" ]; then
+        echo "fossology.user = $FOSSOLOGY_USER" >> /etc/sw360/fossology.properties
+    fi
+    if [ "$FOSSOLOGY_KEY_PRIV" ]; then
+        echo "$FOSSOLOGY_KEY_PRIV" > /etc/sw360/fossology.id_rsa
+        chmod 600 /etc/sw360/fossology.id_rsa
+    fi
+    if [ "$FOSSOLOGY_KEY_PUB" ]; then
+        echo "$FOSSOLOGY_KEY_PUB" > /etc/sw360/fossology.id_rsa.pub
+        chmod 600 /etc/sw360/fossology.id_rsa.pub
+    fi
+fi
+
+################################################################################
 # modify portal ext properties
 addToPortalExtProperties() {
     if [[ $1 == *"="* ]]; then

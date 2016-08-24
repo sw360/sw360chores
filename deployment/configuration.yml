@@ -11,13 +11,47 @@ services:
   sw360:
     environment:
       - POSTGRES_PASSWORD=sw360fossy
-      - COUCHDB_PASSWORD=sw360fossy
+      # - COUCHDB_PASSWORD=sw360fossy
 
       ## the following is also set in `docker-compose.cve-search-server.yml`
       # - CVE_SEARCH_HOST=https://cve.circl.lu/
 
       ## $HTTPS_HOSTS should be a comma seperated list if `host:port` pairs, e.g.
       # - HTTPS_HOSTS=some.bdp_host.org:443,an.ldaps.host:636
+
+      ## the following variables are used to setup the FOSSology connection
+      ## the keypair has to be replaced with a custom one
+      # - FOSSOLOGY_HOST=localhost
+      # - FOSSOLOGY_PORT=22
+      # - |
+      #   FOSSOLOGY_KEY_PRIV=-----BEGIN RSA PRIVATE KEY-----
+      #   MIIEogIBAAKCAQEA3BjSyx1jpi2WW5vSq/t8oDGOliSBIer+ssGGhP/Vjc9K4vW6
+      #   I8LX8jEzAnjjnK1HfqCs9kGSYttorMRQlNzJDeiTf/tZwgxKkVLt+o4ObjcBJJcz
+      #   WuM2yXB2qOVMpyitCaRBxSNPGSKybAxnZj8Pwt4/PiZXMnvUAPXQP0q+ikUVFTfu
+      #   YJz+DCSsoSd3TlQb9LZYfAJsDdc5WpvhepZh7L9qSvyBqjUE1bIZGy/0t8o1nrYc
+      #   UFxI4ZgGW83leVUm30ZXJwOMMl+JLbHwFSV0JlR97LWBvDdIUSm+srp9qvEj4z54
+      #   ATDmy2bv7ppddhkD6gtaHYLLWMPEqEp+wojUHQIDAQABAoIBAA0ue2lowDASqN+h
+      #   rHNaY3NgpG5/jzBN16UzC/BpNgwBLzX6i4Raxf4eTjTGsrMOeaquys0QzkiXZWR7
+      #   eWwA8RWhKTxP/Gcvv0OG2PPZkCmvp6TeXVgDJaPY1XJ2ESotuHdMXBgHblRODKuF
+      #   7qdj/XipQNZjC3PdkKviDO/NdS3oqskImp5H19A09gM6uJ8rGl0tGGAvy0DllgXK
+      #   g5IuLrjVMXchuyKQl4dzWOnVd6BWo7dAlk8YgL2KCSbeWgDeLH2waNCsdT60Wrgd
+      #   c164pIcBq9ziu0UWrtkVqScWqqZqxZTLd6T7Kj4USMVupJ+TYATtJ4CVSuG2jDix
+      #   THRIaO0CgYEA+0YT7tBBliosa3l0hj7AUkmlKAZTDJgerxgdidsJ+IGIbKjGf9J1
+      #   z0KmlU4ZvKyecEU/i4s9AEvZ9GQMu49jk5HMzc4pZ5vWtaty8RpFUq66NQwEn2M2
+      #   euAxHOJwqvVhtnXs0k+9yPNiSxZkPy88zmg8yQGPgkLbZg7ldQt8IL8CgYEA4Dyf
+      #   4RzAfsXO44w5kkyUJPZN8OoIHNJ6c/5/CT7GE0IhQIf6gakQqqWTi8/NI6Q7WwsL
+      #   oOaYBZkmDkGeiehd4yT6UaQqstQhjPjgIVdcXTv52EQ/Ytk8B3CL9Ihb+Nvy9S8o
+      #   hzRuA70cp90CyMFZVUA/HRg++p89OpSZd7VMJiMCgYB8Ut4F6RCqZc94la1rxpyN
+      #   mlaXCRoKPzHfXEUxMikqxZxkdtVP5SfZFpcphG0Dhz0VO44HUyspfF4op2ANZRLV
+      #   ruvwYDLoSpjfZicG2AK4uC71lC6tVf9cqJRkQD2SuLpR9uLn5AB47sMRd9C92ndx
+      #   gO2iXp1MzBuV0YUCdl5CLQKBgDLHZ8k5kpniv5Ql+A+aSd4I7OOGi+nC/DnyQuBc
+      #   F8zap98OK/taxsxuDHiXyTOuCEb4vFxme7ygzs5hq749Ia3DfPAqBgVTJnnfDhpe
+      #   xyrR3yVLZzNCUGa65OauTm2PmXhOgpYDmHo+RBP7Z5sAtfMpRmGXUQO+NcZjSlGi
+      #   e6kTAoGAYws+L+mHCr9FSiWScbtxjc+htdNMPfMmEaQ8zqgczIe0jKtUy0YgU9/0
+      #   J6lt60jCNNbUYRPctg9BUyH1enAG55p+ZLnENpMBbd4WeILloTuB7LCHhtuLezjW
+      #   MobzMydnnwf8utaU5eVMPKn9uYMy6N7zHGUhlczbn2a/xuUMPNM=
+      #   -----END RSA PRIVATE KEY-----
+      # - FOSSOLOGY_KEY_PUB=ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDcGNLLHWOmLZZbm9Kr+3ygMY6WJIEh6v6ywYaE/9WNz0ri9bojwtfyMTMCeOOcrUd+oKz2QZJi22isxFCU3MkN6JN/+1nCDEqRUu36jg5uNwEklzNa4zbJcHao5UynKK0JpEHFI08ZIrJsDGdmPw/C3j8+Jlcye9QA9dA/Sr6KRRUVN+5gnP4MJKyhJ3dOVBv0tlh8AmwN1zlam+F6lmHsv2pK/IGqNQTVshkbL/S3yjWethxQXEjhmAZbzeV5VSbfRlcnA4wyX4ktsfAVJXQmVH3stYG8N0hRKb6yun2q8SPjPngBMObLZu/uml12GQPqC1odgstYw8SoSn7CiNQd sw360@sw360
 
       ## the variable $LDAP_CONFIGURATION can contain the full LDAP configuration
       ## and will be appended to portal-ext.properties. It can be defined in the
@@ -54,8 +88,8 @@ services:
       - POSTGRES_PASSWORD=sw360fossy
 
   sw360couchdb:
-    environment:
-     - COUCHDB_PASSWORD=sw360fossy
+    # environment:
+    #  - COUCHDB_PASSWORD=sw360fossy
     volumes:
       - ./_couchdb:/usr/local/var/lib/couchdb
 
