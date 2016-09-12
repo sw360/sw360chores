@@ -1,0 +1,32 @@
+# Copyright Bosch Software Innovations GmbH, 2016.
+# Part of the SW360 Portal Project.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+
+# This file opens additional ports for development purposes in the
+# sw360 environment. Use it together with the main docker-compose.yml
+# as described in README.md
+
+version: '2'
+services:
+  sw360nginx:
+    logging:
+      driver: "none"
+  sw360:
+    ports:
+      - 8080:8080
+      - 5005:5005
+    environment:
+      - TOMCAT_DEBUG_PORT=5005
+  sw360postgres:
+    ports:
+      - 5432:5432
+  sw360couchdb:
+    ports:
+      - 5984:5984
+  sw360couchdb-lucene:
+    ports:
+      - 5985:5985
