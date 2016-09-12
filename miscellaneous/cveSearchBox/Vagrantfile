@@ -1,0 +1,49 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Copyright Bosch Software Innovations GmbH, 2016.
+# Part of the SW360 Portal Project.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+
+$install = <<SCRIPT
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+apt-get update
+apt-get install -y git-core python3 python3-pip mongodb-org redis-server \
+    python-libxml2 libxml2-dev libxslt1-dev python-dev zlib1g-dev
+service mongod start
+
+su vagrant <<EOF
+cd ~
+git clone https://github.com/cve-search/cve-search
+cd cve-search
+sudo pip3 install -r requirements.txt
+
+time ./sbin/db_mgmt.py -p
+time ./sbin/db_mgmt_cpe_dictionary.py
+time ./sbin/db_updater.py -c
+EOF
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  # config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "trusty64"
+  config.vm.box_url = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+
+  config.vm.provider "virtualbox" do |v|
+    v.linked_clone = true if Vagrant::VERSION =~ /^1.8/
+    v.customize ["modifyvm", :id, "--memory", "4096"]
+    v.customize ["modifyvm", :id, "--cpus", "2"]
+    # v.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
+    v.name = "cveSearchBox"
+  end
+
+  config.vm.provision "shell" do |s|
+    s.inline = $install
+  end
+  config.vm.network "forwarded_port", guest: 5000, host: 5000
+end
