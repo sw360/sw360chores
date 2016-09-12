@@ -11,8 +11,14 @@
 # This script invokes the building of the dependency package required by
 # sw360 and copies that into the sw360 folder.
 
-set -ex
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$DIR/../packaging/"
-OUTPUT_DIR="$DIR/sw360" rake docker:package:tar
+set -e
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PACKAGE_DIR="$DIR/../packaging/"
+OUTPUT_DIR="$DIR/sw360"
+cat "$PACKAGE_DIR/sw360packager.Dockerfile" \
+    | docker build -t sw360/sw360packager --rm=true --force-rm=true -
+docker run -i \
+       -v "${PACKAGE_DIR}:/sw360chore" \
+       -v "${OUTPUT_DIR}:/sw360chore/_output" \
+       -w /sw360chore sw360/sw360packager \
+       gosu $(id -u):$(id -g) rake package:tar

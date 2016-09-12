@@ -86,7 +86,8 @@ You need to place the `.tar.gz` package of the sw360 dependencies in the folder
 folder `../../packaging`.
 
 Alternatively you can use the script `./prepare.sh`, which invokes the build process for
-the dependencies and copies them to the appropriate location.
+the dependencies and copies them to the appropriate location, without the
+dependency to `rake` resp. Ruby.
 
 ### Step 2: Build the docker images (only needed initially and for updating the environment)
 For building the currently in `configuration.env` configured part one can use the command
