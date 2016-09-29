@@ -24,6 +24,9 @@ services:
     environment:
       - HOST=sw360
       - HOST_PORT=8080
+    extends:
+      file: configuration.yml
+      service: sw360nginx
 
   sw360:
     build:
