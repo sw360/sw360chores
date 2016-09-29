@@ -9,6 +9,8 @@
 version: '2'
 services:
   sw360:
+    # dns:
+    #   - 8.8.8.8
     environment:
       - POSTGRES_PASSWORD=sw360fossy
       # - COUCHDB_PASSWORD=sw360fossy
