@@ -11,9 +11,11 @@ FROM nginx
 RUN nginx_cert_dir='/etc/nginx/certs' \
     nginx_key='nginx.key' \
     nginx_cert='nginx.pem' \
+    password_file='fifo' \
     set -x \
  && mkdir -p $nginx_cert_dir \
- && openssl req -newkey rsa:2048 -nodes -keyout "$nginx_cert_dir/$nginx_key" -x509 -days 365 -out "$nginx_cert_dir/$nginx_cert" -subj '/CN=sw360.localdomain'
+ && openssl req -newkey rsa:2048 -nodes -keyout "$nginx_cert_dir/$nginx_key" -x509 -days 365 -out "$nginx_cert_dir/$nginx_cert" -subj '/CN=sw360.localdomain' \
+ && touch "$nginx_cert_dir/fifo"
 
 EXPOSE 8443
 

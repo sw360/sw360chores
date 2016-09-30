@@ -24,3 +24,6 @@ services:
     environment:
       - HOST=sw360couchdb
       - HOST_PORT=5984
+    extends:
+      file: configuration.yml
+      service: sw360nginx
