@@ -24,6 +24,7 @@ services:
     environment:
       - HOST=sw360
       - HOST_PORT=8080
+      - RESTRICTED_URLS=manager|attachments|bdpimport|components|cvesearch|fossology|layouttpl|licenseinfo|licenses|moderation|projects|schedule|search|users|vendors|vulnerabilities
 
   sw360:
     build:
