@@ -10,6 +10,7 @@ version: '2'
 services:
   sw360:
     environment:
+      # - PORT=8443
       - POSTGRES_PASSWORD=sw360fossy
       # - COUCHDB_PASSWORD=sw360fossy
 
