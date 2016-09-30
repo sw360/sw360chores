@@ -28,7 +28,8 @@
 #    $CVE_SEARCH_HOST (optional)
 #
 # for sw360 configuration
-#    $PROTOCOL (defaults to: "http")
+#    $PROTOCOL (defaults to: "https")
+#    $PORT (defaults to: "8443")
 #
 # for LDAP configuration
 #    $LDAP_HOST (e.g. ldap://10.1.2.100:389)
@@ -150,7 +151,8 @@ addToPortalExtProperties() {
 }
 
 # Setup for nginx with https
-addToPortalExtProperties "web.server.protocol=${PROTOCOL:-http}"
+addToPortalExtProperties "web.server.protocol=${PROTOCOL:-https}"
+addToPortalExtProperties "web.server.${PROTOCOL:-http}.port=${PORT:-8443}"
 
 
 # Setup for authentification with ldap
