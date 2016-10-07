@@ -113,9 +113,13 @@ automatically, instead of `docker-compose` directly.
 `http_proxy=http://localhost:3128`, they will not work directly. You have to
 make cntlm listen on the device related to docker, i.e. add
 ```
-Listen 172.17.0.1:3128
+Listen 172.29.5.254
 ```
-to `/etc/cntlm.conf` and set `http_proxy=http://172.17.0.1:3128` in the file `proxy.env`.
+to `/etc/cntlm.conf` and set `http_proxy=http://172.29.6.254:3128` in the file `proxy.env`.
+
+The IP `172.29.5.254` is configured in `docker-compose.yml` and is the gateway
+of the network `sw360` (which is the only netwok with containers talking to the
+internet).
 
 ### Step 3: Running the containers
 The simplest way to run the containers is to use the following command

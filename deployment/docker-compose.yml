@@ -19,7 +19,9 @@ services:
     restart: unless-stopped
     ports:
       - 8443:8443
-    links:
+    networks:
+      - sw360front
+    depends_on:
       - sw360
     environment:
       - HOST=sw360
@@ -34,7 +36,10 @@ services:
         - no_proxy
     image: sw360
     restart: unless-stopped
-    links:
+    networks:
+      - sw360front
+      - sw360DBs
+    depends_on:
       - sw360postgres
       - sw360couchdb
     environment:
@@ -54,6 +59,8 @@ services:
     extends:
       file: configuration.yml
       service: sw360postgres
+    networks:
+      - sw360DBs
     environment:
       - POSTGRES_DB=sw360pgdb
       - POSTGRES_USER=sw360
@@ -65,6 +72,8 @@ services:
     extends:
       file: configuration.yml
       service: sw360couchdb
+    networks:
+      - sw360DBs
     environment:
       - COUCHDB_USER=sw360
       - COUCHDB_LUCENE_HOST=sw360couchdb-lucene
@@ -78,8 +87,24 @@ services:
         - no_proxy
     image: sw360couchdb-lucene
     restart: unless-stopped
-    links:
+    networks:
+      - sw360DBs
+    depends_on:
       - sw360couchdb
     environment:
       - COUCHDB_HOST=sw360couchdb
+
+networks:
+  sw360front:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.29.5.0/24
+          gateway: 172.29.5.254
+  sw360DBs:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.29.6.0/24
+          gateway: 172.29.6.254
 
