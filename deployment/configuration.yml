@@ -10,6 +10,13 @@ version: '2'
 services:
   sw360:
     environment:
+      ## the following variable contains configuration, which overwrite 
+      # - |
+      #   SW360_PROPERTIES=
+      #   schedule.firstOffset.seconds = 0
+      #   schedule.interval.seconds = 186400
+      #   clearing.teams=org1,org2,org3
+
       - POSTGRES_PASSWORD=sw360fossy
       # - COUCHDB_PASSWORD=sw360fossy
 

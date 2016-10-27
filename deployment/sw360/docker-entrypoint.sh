@@ -52,8 +52,14 @@ if [ "$POSTGRES_PASSWORD" ]; then
 fi
 
 ################################################################################
-# Setup couchdb
+# Setup sw360
 mkdir -p /etc/sw360
+if [ "$SW360_PROPERTIES" ]; then
+    echo -e "$SW360_PROPERTIES" > /etc/sw360/sw360.properties
+fi
+
+################################################################################
+# Setup couchdb
 echo "couchdb.url = http://${COUCHDB_HOST:-localhost}:5984" > /etc/sw360/couchdb.properties
 if [ "$COUCHDB_USER" ]; then
     echo "couchdb.user = $COUCHDB_USER" >> /etc/sw360/couchdb.properties
