@@ -6,17 +6,10 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM debian:jessie
+FROM sw360baseimage
 MAINTAINER admin@sw360.org
-ENV DEBIAN_FRONTEND noninteractive
 
-ENV _update="apt-get update"
-ENV _install="apt-get install -y --no-install-recommends"
-ENV _cleanup="eval apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*"
-ENV _purge="apt-get purge -y --auto-remove"
-
-run if [ "$http_proxy" = "None" ]; then unset http_proxy; fi && if [ "$https_proxy" = "None" ]; then unset https_proxy; fi \
- && set -x \
+RUN . /usr/local/bin/setupProxy.sh && set -x \
  && echo "deb http://ftp.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list \
  && $_update && $_install openjdk-8-jre openjdk-8-jdk git-core unzip \
  && apt-get update --fix-missing && $_install maven \
@@ -26,8 +19,7 @@ run if [ "$http_proxy" = "None" ]; then unset http_proxy; fi && if [ "$https_pro
 
 run mkdir -p /couchdb-lucene
 WORKDIR /couchdb-lucene
-run if [ "$http_proxy" = "None" ]; then unset http_proxy; fi && if [ "$https_proxy" = "None" ]; then unset https_proxy; fi \
- && set -x \
+RUN . /usr/local/bin/setupProxy.sh && set -x \
  && git clone https://github.com/rnewson/couchdb-lucene /couchdb-lucene \
  && git checkout v1.1.0 \
  && if [ -z "$http_proxy" ]; then \

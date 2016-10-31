@@ -13,6 +13,11 @@
 version: '2'
 services:
 
+  sw360baseimage:
+    build: ./sw360baseimage
+    image: sw360baseimage
+    command: /bin/true # just build the image and exit imediately when started
+
   sw360nginx:
     build: ./sw360nginx/
     image: sw360nginx
@@ -32,6 +37,8 @@ services:
         - http_proxy
         - https_proxy
         - no_proxy
+    depends_on:
+      - sw360baseimage
     image: sw360
     restart: unless-stopped
     links:
@@ -76,6 +83,8 @@ services:
         - http_proxy
         - https_proxy
         - no_proxy
+    depends_on:
+      - sw360baseimage
     image: sw360couchdb-lucene
     restart: unless-stopped
     links:

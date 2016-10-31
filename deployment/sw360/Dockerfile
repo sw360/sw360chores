@@ -6,15 +6,10 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM debian:jessie
+FROM sw360baseimage
 MAINTAINER admin@sw360.org
-ENV DEBIAN_FRONTEND noninteractive
 
-ENV _update="apt-get update"
-ENV _install="apt-get install -y --no-install-recommends"
-ENV _cleanup="eval apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*"
-
-RUN set -x \
+RUN . /usr/local/bin/setupProxy.sh && set -x \
  && echo "deb http://ftp.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list \
  && $_update && $_install openjdk-8-jre && $_cleanup \
  && update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java \

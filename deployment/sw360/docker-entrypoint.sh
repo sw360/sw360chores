@@ -142,4 +142,6 @@ fi
 CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/bin/startup.sh
 
 ################################################################################
+source /usr/local/bin/setupProxy.sh
+
 exec "$@"

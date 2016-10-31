@@ -115,7 +115,10 @@ make cntlm listen on the device related to docker, i.e. add
 ```
 Listen 172.17.0.1:3128
 ```
-to `/etc/cntlm.conf` and set `http_proxy=http://172.17.0.1:3128` in the file `proxy.env`.
+to `/etc/cntlm.conf` and set `http_proxy=CNTLM_ON_GATEWAY` in the file
+`proxy.env`. This will be parsed by the script `setupProxy.sh` in the
+`sw360baseimage` and replaced by the ip of the gateway (i.e. the host, runing
+cntlm) with the port `3128`.
 
 ### Step 3: Running the containers
 The simplest way to run the containers is to use the following command
