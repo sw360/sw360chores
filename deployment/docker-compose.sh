@@ -15,21 +15,16 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ################################################################################
 # handle environmental variables and other inputs
 
-if [ "$1" == "--dry-run" ]; then
-    shift
-    DRY_RUN=true
-fi
-
 if [ "$1" == "--ignore-configuration-file" ]; then
     shift
 else
     [ -f "$DIR/configuration.env" ] && source "$DIR/configuration.env"
 fi
 
-DRY_RUN=${DRY_RUN:-false}
 DEV_MODE=${DEV_MODE:-false}
 CVE_SEARCH=${CVE_SEARCH:-false}
 HTTPS_COUCHDB=${HTTPS_COUCHDB:-false}
+BACKUP_FOLDER=${BACKUP_FOLDER:-./_backup}
 
 type "docker-compose" &> /dev/null || {
     echo "this script needs docker-compose to be installed within \$PATH"
@@ -53,26 +48,32 @@ This is a wrapper around docker-compose which adds
 Can be used in the same way as the direct docker-compose call up to minor changes:
  - one does not have to specify the compose files via the \`-f\` parameter
  - adds the following potential first (and only) arguments
-   - \`--dry-run\` (only echo and do not run cmd)
    - \`--ignore-configuration-file\` (do not build the \`-f\` part automatically)
    - \`--save-images\` (saves all images related to the current configuration to \`./_images/\`)
    - \`--load-images\` (loads all images in \`./_images/\` into docker)
+   - \`--backup` (backups all volumes to the path defined in \$BACKUP_FOLDER)
+   - \`--restore` (restores all volumes from the path defined in \$BACKUP_FOLDER)
 
 All allowed ways of calling this script:
-     \$ $0 [--dry-run] [--ignore-configuration-file] <some docker-compose arguments>
-     \$ $0 [--save-images]
-     \$ $0 [--load-images]
+- generic calling of docker-compose commands
+     \$ $0 [--ignore-configuration-file] <some docker-compose arguments>
+- import and export of images
+     \$ $0 --save-images
+     \$ $0 --load-image]
+- backup and restore of volume data
+     \$ $0 --backup
+     \$ $0 --restore
 
 Example calls of this script as docker-compose wrapper:
      \$ DEV_MODE=true $0 up -d
      \$ $0 restart sw360
      \$ $0 logs -f
-     \$ $0 --ignore-configuration-file up \$app (used by systemd)
 
 The environmental variables / inputs are set to
     DRY_RUN=$DRY_RUN
     DEV_MODE=$DEV_MODE
     CVE_SEARCH=$CVE_SEARCH
+    BACKUP_FOLDER=$BACKUP_FOLDER
 
 EOF
     exit 0
@@ -93,8 +94,8 @@ cmdDockerCompose="${cmdDocker}-compose -f $DIR/docker-compose.yml"
 [ "$HTTPS_COUCHDB" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.couchdb-https.yml"
 
 ################################################################################
-# run the command:
-if [ "$1" == "--save-images" ]; then
+# helper functions
+saveImages() {
     mkdir -p "$DIR/_images"
     cmdDockerCompose="$cmdDockerCompose ps -q"
     $cmdDockerCompose |\
@@ -104,16 +105,95 @@ if [ "$1" == "--save-images" ]; then
             echo "Save image $image to ./_images/$image.tar ..."
             $cmdDocker save -o "$DIR/_images/$image.tar" "$image"
         done
-elif [ "$1" == "--load-images" ]; then
+}
+
+loadImages() {
     for imageArchive in $DIR/_images/*.tar; do
         echo "load image $(basename "$imageArchive") ..."
         $cmdDocker load -i "$imageArchive"
     done
+}
+
+backup() {
+    mkdir -p "$BACKUP_FOLDER"
+    cmdDockerCompose="$cmdDockerCompose ps -q"
+    $cmdDockerCompose |\
+        while read -r containerId; do
+            containerName=$($cmdDocker inspect -f '{{ .Name }}' $containerId |\
+                                   sed 's%^/%%g')
+            echo -e "backup ${containerName}"
+
+            volumes=$($cmdDocker inspect -f '{{ .Config.Volumes }}' $containerId)
+            if [[ ! "$volumes" = "map["*"]" ]]; then
+                echo "there were problems with recieving the list of volumes: $volumes"
+                exit 1
+            else
+                volumes=( $(echo $volumes |\
+                    sed 's/map\[\(.*\)\]/\1/' |\
+                    sed 's/:{}//g') )
+
+                for volume in "${volumes[@]}"; do
+                    echo -e "\tbackup volume ${volume} of ${containerName}"
+                    backupFileName="${containerName}_$(echo $volume | sed 's%/%_%g').tar"
+                    $cmdDocker run --rm \
+                           --volumes-from $containerId \
+                           -v "$(realpath $BACKUP_FOLDER):/backup" \
+                           debian:jessie \
+                           tar cf "/backup/$backupFileName" ${volume}
+                done
+            fi
+        done
+}
+
+restore() {
+    if [[ ! -d "$BACKUP_FOLDER" ]]; then
+        echo "the backup ($BACKUP_FOLDER) folder does not exist"
+        exit 1
+    fi
+    cmdDockerCompose="$cmdDockerCompose ps -q"
+    $cmdDockerCompose |\
+        while read -r containerId; do
+            containerName=$($cmdDocker inspect -f '{{ .Name }}' $containerId |\
+                                   sed 's%^/%%g')
+            echo -e "restore ${containerName}"
+
+            volumes=$($cmdDocker inspect -f '{{ .Config.Volumes }}' $containerId)
+            if [[ ! "$volumes" = "map["*"]" ]]; then
+                echo "there were problems with recieving the list of volumes: $volumes"
+                exit 1
+            else
+                volumes=( $(echo $volumes |\
+                    sed 's/map\[\(.*\)\]/\1/' |\
+                    sed 's/:{}//g') )
+
+                for volume in "${volumes[@]}"; do
+                    backupFileName="${containerName}_$(echo $volume | sed 's%/%_%g').tar"
+                    if [[ ! -f "$BACKUP_FOLDER/$backupFileName" ]]; then
+                        echo "there is no backup file $backupFileName"
+                    else
+                        echo -e "\trestore volume ${volume} of ${containerName}"
+                        $cmdDocker run --rm \
+                               --volumes-from $containerId \
+                               -v "$(realpath $BACKUP_FOLDER):/backup" \
+                               debian:jessie \
+                               tar -xf "/backup/$backupFileName" -C /
+                    fi
+                done
+            fi
+        done
+}
+
+################################################################################
+# run the command:
+if [ "$1" == "--save-images" ]; then
+    saveImages
+elif [ "$1" == "--load-images" ]; then
+    loadImages
+elif [ "$1" == "--backup" ]; then
+    backup
+elif [ "$1" == "--restore" ]; then
+    restore
 else
     cmdDockerCompose="$cmdDockerCompose $*"
-    if [ "$DRY_RUN" = true ]; then
-        echo "$cmdDockerCompose"
-    else
-        $cmdDockerCompose
-    fi
+    $cmdDockerCompose
 fi
