@@ -12,21 +12,35 @@
 
 version: '2'
 services:
+
+  sw360baseimage:
+    build: ./sw360baseimage
+    image: sw360baseimage
+    command: /bin/true # just build the image and exit imediately when started
+
   sw360nginx:
     logging:
       driver: "none"
+
   sw360:
     ports:
       - 8080:8080
       - 5005:5005
     environment:
       - TOMCAT_DEBUG_PORT=5005
+    depends_on:
+      - sw360baseimage
+
   sw360postgres:
     ports:
       - 5432:5432
+
   sw360couchdb:
     ports:
       - 5984:5984
+
   sw360couchdb-lucene:
     ports:
       - 5985:5985
+    depends_on:
+      - sw360baseimage
