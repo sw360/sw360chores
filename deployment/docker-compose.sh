@@ -114,35 +114,93 @@ loadImages() {
     done
 }
 
+backupVolumeOf() {
+    containerId=$1
+    containerName=$2
+    volume=$3
+
+    echo -e "\t...backup volume ${volume} of ${containerName}"
+    backupFileName="${containerName}_$(echo $volume | sed 's%/%_%g').tar"
+    $cmdDocker run --rm \
+               --volumes-from $containerId \
+               -v "$(realpath $BACKUP_FOLDER):/backup" \
+               debian:jessie \
+               tar cf "/backup/$backupFileName" ${volume}
+}
+
+backupAllVolumesOf() {
+    containerId=$1
+
+    containerName=$($cmdDocker inspect -f '{{ .Name }}' $containerId |\
+                           sed 's%^/%%g')
+    echo -e "backup ${containerName}"
+
+    volumes=$($cmdDocker inspect -f '{{ .Config.Volumes }}' $containerId)
+    if [[ ! "$volumes" = "map["*"]" ]]; then
+        echo "there were problems with recieving the list of volumes: $volumes"
+        exit 1
+    else
+        volumes=( $(echo $volumes |\
+                           sed 's/map\[\(.*\)\]/\1/' |\
+                           sed 's/:{}//g') )
+
+        for volume in "${volumes[@]}"; do
+            backupVolumeOf $containerId $containerName $volume
+        done
+    fi
+}
+
 backup() {
     mkdir -p "$BACKUP_FOLDER"
     cmdDockerCompose="$cmdDockerCompose ps -q"
-    $cmdDockerCompose |\
-        while read -r containerId; do
-            containerName=$($cmdDocker inspect -f '{{ .Name }}' $containerId |\
-                                   sed 's%^/%%g')
-            echo -e "backup ${containerName}"
+    containerIds=( $($cmdDockerCompose | xargs) )
+    for containerId in "${containerIds[@]}"; do
+        backupAllVolumesOf $containerId
+    done
+}
 
-            volumes=$($cmdDocker inspect -f '{{ .Config.Volumes }}' $containerId)
-            if [[ ! "$volumes" = "map["*"]" ]]; then
-                echo "there were problems with recieving the list of volumes: $volumes"
-                exit 1
-            else
-                volumes=( $(echo $volumes |\
-                    sed 's/map\[\(.*\)\]/\1/' |\
-                    sed 's/:{}//g') )
+restoreVolumeOf() {
+    containerId=$1
+    containerName=$2
+    volume=$3
 
-                for volume in "${volumes[@]}"; do
-                    echo -e "\tbackup volume ${volume} of ${containerName}"
-                    backupFileName="${containerName}_$(echo $volume | sed 's%/%_%g').tar"
-                    $cmdDocker run --rm \
-                           --volumes-from $containerId \
-                           -v "$(realpath $BACKUP_FOLDER):/backup" \
-                           debian:jessie \
-                           tar cf "/backup/$backupFileName" ${volume}
-                done
-            fi
+    backupFileName="${containerName}_$(echo $volume | sed 's%/%_%g').tar"
+    if [[ ! -f "$BACKUP_FOLDER/$backupFileName" ]]; then
+        echo "there is no backup file $backupFileName"
+    else
+        read -p "restore the volume ${volume} of ${containerName}? " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "\t...restore the volume ${volume} of ${containerName}"
+            $cmdDocker run --rm \
+                       --volumes-from $containerId \
+                       -v "$(realpath $BACKUP_FOLDER):/backup" \
+                       debian:jessie \
+                       tar -xf "/backup/$backupFileName" -C /
+        fi
+    fi
+}
+
+restoreAllVolumesOf() {
+    containerId=$1
+
+    containerName=$($cmdDocker inspect -f '{{ .Name }}' $containerId |\
+                           sed 's%^/%%g')
+    echo -e "restore ${containerName}"
+
+    volumes=$($cmdDocker inspect -f '{{ .Config.Volumes }}' $containerId)
+    if [[ ! "$volumes" = "map["*"]" ]]; then
+        echo "there were problems with recieving the list of volumes: $volumes"
+        exit 1
+    else
+        volumes=( $(echo $volumes |\
+                           sed 's/map\[\(.*\)\]/\1/' |\
+                           sed 's/:{}//g') )
+
+        for volume in "${volumes[@]}"; do
+            restoreVolumeOf $containerId $containerName $volume
         done
+    fi
 }
 
 restore() {
@@ -151,36 +209,10 @@ restore() {
         exit 1
     fi
     cmdDockerCompose="$cmdDockerCompose ps -q"
-    $cmdDockerCompose |\
-        while read -r containerId; do
-            containerName=$($cmdDocker inspect -f '{{ .Name }}' $containerId |\
-                                   sed 's%^/%%g')
-            echo -e "restore ${containerName}"
-
-            volumes=$($cmdDocker inspect -f '{{ .Config.Volumes }}' $containerId)
-            if [[ ! "$volumes" = "map["*"]" ]]; then
-                echo "there were problems with recieving the list of volumes: $volumes"
-                exit 1
-            else
-                volumes=( $(echo $volumes |\
-                    sed 's/map\[\(.*\)\]/\1/' |\
-                    sed 's/:{}//g') )
-
-                for volume in "${volumes[@]}"; do
-                    backupFileName="${containerName}_$(echo $volume | sed 's%/%_%g').tar"
-                    if [[ ! -f "$BACKUP_FOLDER/$backupFileName" ]]; then
-                        echo "there is no backup file $backupFileName"
-                    else
-                        echo -e "\trestore volume ${volume} of ${containerName}"
-                        $cmdDocker run --rm \
-                               --volumes-from $containerId \
-                               -v "$(realpath $BACKUP_FOLDER):/backup" \
-                               debian:jessie \
-                               tar -xf "/backup/$backupFileName" -C /
-                    fi
-                done
-            fi
-        done
+    containerIds=( $($cmdDockerCompose | xargs) )
+    for containerId in "${containerIds[@]}"; do
+        restoreAllVolumesOf $containerId
+    done
 }
 
 ################################################################################
