@@ -28,6 +28,7 @@ fi
 
 DRY_RUN=${DRY_RUN:-false}
 DEV_MODE=${DEV_MODE:-false}
+REST=${REST:-false}
 CVE_SEARCH=${CVE_SEARCH:-false}
 HTTPS_COUCHDB=${HTTPS_COUCHDB:-false}
 
@@ -73,6 +74,7 @@ The environmental variables / inputs are set to
     DRY_RUN=$DRY_RUN
     DEV_MODE=$DEV_MODE
     CVE_SEARCH=$CVE_SEARCH
+    BACKUP_FOLDER=$BACKUP_FOLDER
 
 EOF
     exit 0
@@ -89,6 +91,7 @@ addSudoIfNeeded() {
 cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' proxy.env | xargs) docker"
 cmdDockerCompose="${cmdDocker}-compose -f $DIR/docker-compose.yml"
 [ "$DEV_MODE" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.dev.yml"
+[ "$REST" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.rest-server.yml"
 [ "$CVE_SEARCH" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.cve-search-server.yml"
 [ "$HTTPS_COUCHDB" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.couchdb-https.yml"
 
