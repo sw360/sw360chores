@@ -47,6 +47,6 @@ namespace :couchdb_lucene do
 
   task :couchdb_lucene => [:build] do
     mkdir_p WEBAPPS
-    mv("#{COUCHDB_LUCENE_TARDIR}/target/#{COUCHDB_LUCENE_NAME}-#{COUCHDB_LUCENE_VERSION}.war", WEBAPPS)
+    mv("#{COUCHDB_LUCENE_TARDIR}/target/#{COUCHDB_LUCENE_NAME}-#{COUCHDB_LUCENE_VERSION}.war", "#{WEBAPPS}/#{COUCHDB_LUCENE_NAME}.war")
   end
 end
