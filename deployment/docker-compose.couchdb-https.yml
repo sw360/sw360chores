@@ -19,7 +19,9 @@ services:
     restart: unless-stopped
     ports:
       - 9443:8443
-    links:
+    networks:
+      - sw360DBs
+    depends_on:
       - sw360couchdb
     environment:
       - HOST=sw360couchdb

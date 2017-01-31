@@ -38,6 +38,14 @@ services:
     #   - 8.8.8.8
     environment:
       # - PORT=8443
+      ## the following variable contains configuration, which overwrite 
+      # - |
+      #   SW360_PROPERTIES=
+      #   schedule.cvesearch.firstOffset.seconds = 0
+      #   schedule.cvesearch.interval.seconds = 186400
+      #   autostart = cvesearchServices
+      #   clearing.teams=org1,org2,org3
+
       - POSTGRES_PASSWORD=sw360fossy
       # - COUCHDB_PASSWORD=sw360fossy
 
