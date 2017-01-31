@@ -95,6 +95,12 @@ cmdDockerCompose="${cmdDocker}-compose -f $DIR/docker-compose.yml"
 
 ################################################################################
 # helper functions
+
+# realpath is not available on macosx
+type "realpath" &> /dev/null || realpath() {
+    cd "$1" && pwd
+}
+
 saveImages() {
     mkdir -p "$DIR/_images"
     cmdDockerCompose="$cmdDockerCompose ps -q"
