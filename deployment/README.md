@@ -131,6 +131,17 @@ collects and routes the logs of all container in a very configurable way.
 Further documentation can be found in the corresponding
 [README.md](https://github.com/gliderlabs/logspout/blob/master/README.md).
 
+#### Backup and restore content of docker volumes
+The `./docker-compose.sh` command has the optional parameters `--backup` and
+`--restore` which allow to write the content of all related volumes to tar
+files, which are placed in the folder defined as `BACKUP_FOLDER` in
+`./configuration.env`.
+
+**Trick:** Define `BACKUP_FOLDER=./_backup/$(date +%F)` in `./configuration.env`
+to place the backups of every day into an different folder. But this might not
+work with restoring, i.e. manual setting of the `BACKUP_FOLDER` might be needed
+to restore the desired version.
+
 #### Some handy docker-compose commands
 Besides the up commend used in the previous description, there are more commends that
 can be used with the docker-compose files listed above
