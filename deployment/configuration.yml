@@ -37,6 +37,7 @@ services:
     # dns:
     #   - 8.8.8.8
     environment:
+      # - PORT=8443
       - POSTGRES_PASSWORD=sw360fossy
       # - COUCHDB_PASSWORD=sw360fossy
 
