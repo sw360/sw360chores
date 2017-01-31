@@ -75,8 +75,8 @@ echo >> /etc/sw360/couchdb.properties
 #
 # $HTTPS_HOSTS should be a comma seperated list if `host:port` pairs, e.g.
 #    "some.bdp_host.org:443,an.ldaps.host:636"
+[[ "$JAVA_HOME" ]] || JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
 if [ "$HTTPS_HOSTS" ]; then
-    [[ "$JAVA_HOME" ]] || JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
     for HOST in $(echo $HTTPS_HOSTS | sed "s/,/ /g"); do
         echo "Trust certificate of host $HOST ..."
         openssl s_client -connect "${HOST}" < /dev/null \
@@ -89,6 +89,33 @@ if [ "$HTTPS_HOSTS" ]; then
                 -import -file public.crt || continue
     done
 fi
+
+################################################################################
+# Setup for trusted Certificate Authorities
+#
+# $TRUSTED_CACERTS should be a comma separated list of environment variable
+# names, e.g.:
+# "TRUSTED_CA1,TRUSTED_CA2"
+# Mentioned variables ($TRUSTED_CA1 and $TRUSTED_CA2 in this example) should
+# contain the certificates, e.g.:
+# -----BEGIN CERTIFICATE-----
+# AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+# -----END CERTIFICATE-----
+if [ "$TRUSTED_CACERTS" ]; then
+    for CERT_NAME in $(echo $TRUSTED_CACERTS | sed "s/,/ /g"); do
+        if [ "${!CERT_NAME}" ]; then
+          echo "Trust certificate $CERT_NAME ..."
+          OUT="$(mktemp).crt"
+          echo -e "${!CERT_NAME}" > $OUT
+          keytool -keystore "$JAVA_HOME/lib/security/cacerts" \
+                  -alias "$CERT_NAME" \
+                  -storepass changeit \
+                  -noprompt \
+                  -import -file $OUT
+        fi
+    done
+fi
+
 
 ################################################################################
 # Setup for cve-search
@@ -138,6 +165,16 @@ if [[ $LDAP_CONFIGURATION ]]; then
     while read -r line; do
         addToPortalExtProperties "$line"
     done <<< "$LDAP_CONFIGURATION"
+fi
+
+################################################################################
+
+# Setup for ldap importer
+mkdir -p /etc/ldap-importer
+if [[ $LDAP_IMPORTER_CONFIGURATION ]]; then
+  while read -r line; do
+    echo $line >> /etc/ldap-importer/ldapimporter.properties
+  done <<< "$LDAP_IMPORTER_CONFIGURATION"
 fi
 
 ################################################################################

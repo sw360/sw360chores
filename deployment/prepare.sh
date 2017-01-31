@@ -15,10 +15,26 @@ set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PACKAGE_DIR="$DIR/../packaging/"
 OUTPUT_DIR="$DIR/sw360"
+################################################################################
+# compose the command:
+addSudoIfNeeded() {
+    docker info &> /dev/null || {
+        echo "sudo"
+    }
+}
+
+cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' $DIR/proxy.env | xargs) docker"
 cat "$PACKAGE_DIR/sw360packager.Dockerfile" \
-    | docker build -t sw360/sw360packager --rm=true --force-rm=true -
-docker run -i \
-       -v "${PACKAGE_DIR}:/sw360chore" \
-       -v "${OUTPUT_DIR}:/sw360chore/_output" \
-       -w /sw360chore sw360/sw360packager \
-       gosu $(id -u):$(id -g) rake package:tar
+    | $cmdDocker build \
+      --build-arg http_proxy \
+      --build-arg https_proxy \
+      --build-arg no_proxy \
+      -t sw360/sw360packager --rm=true --force-rm=true -
+$cmdDocker run -i \
+      --env http_proxy \
+      --env https_proxy \
+      --env no_proxy \
+      -v "${PACKAGE_DIR}:/sw360chore" \
+      -v "${OUTPUT_DIR}:/sw360chore/_output" \
+      -w /sw360chore sw360/sw360packager \
+      gosu $(id -u):$(id -g) rake package:tar
