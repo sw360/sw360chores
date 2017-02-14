@@ -48,7 +48,7 @@ restore() {
     dbCreationOutput=$(curl -X PUT "http://${host}:5984/${db}")
     if [[ "$dbCreationOutput" = *"\"ok\":true"* ]]; then
         # backup the data
-        cmd="bash ${DIR}/bin/couchdb-backup.sh -r -H $host -d $db -f $jsonFile"
+        cmd="bash ${DIR}/bin/couchdb-backup.sh -c -r -H $host -d $db -f $jsonFile"
         if [ $user ]; then
             cmd="$cmd -u $user"
             if [ $password ]; then

@@ -6,19 +6,10 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM debian:jessie
+FROM java:openjdk-8-jre-alpine
 MAINTAINER admin@sw360.org
-ENV DEBIAN_FRONTEND noninteractive
 
-ENV _update="apt-get update"
-ENV _install="apt-get install -y --no-install-recommends"
-ENV _cleanup="eval apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*"
-
-RUN set -x \
- && echo "deb http://ftp.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list \
- && $_update && $_install openjdk-8-jre && $_cleanup \
- && update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java \
- && echo "JAVA_HOME=\"/usr/lib/jvm/java-8-openjdk-amd64/jre\"" >> /etc/environment
+RUN apk add --update bash
 
 EXPOSE 8080
 EXPOSE 5005
@@ -37,4 +28,4 @@ RUN  rm -rf /opt/sw360/webapps/examples \
 VOLUME [ "/opt/sw360" ]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["tailf", "-0", "/opt/sw360/logs/catalina.out"]
+CMD ["tail", "-f", "/opt/sw360/logs/catalina.out"]

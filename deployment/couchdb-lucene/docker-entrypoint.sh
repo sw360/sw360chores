@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # Copyright Bosch Software Innovations GmbH, 2016.
 # Part of the SW360 Portal Project.
@@ -8,16 +8,19 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-set -e
+set -ex
 
-[[ "$COUCHDB_HOST" ]] || {
+if [ ! "$COUCHDB_HOST" ]; then
     echo "the environmental variable \$COUCHDB_HOST must be set"
     exit 1
-}
+fi
 
-([ "$COUCHDB_USER" ] && [ "$COUCHDB_PASSWORD" ]) && {
+if [ "$COUCHDB_USER" ] && [ "$COUCHDB_PASSWORD" ]; then
     COUCHDB_HOST="${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_HOST}"
-}
+fi
+
+ls /
+ls /couchdb-lucene
 
 sed -i -r 's/^url.*=.*/url = http:\/\/'"$COUCHDB_HOST:${COUCHDB_PORT:-5984}"'/' "/couchdb-lucene/conf/couchdb-lucene.ini"
 sed -i -r 's/^host.*=.*/host = 0.0.0.0/' "/couchdb-lucene/conf/couchdb-lucene.ini"
