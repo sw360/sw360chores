@@ -53,6 +53,15 @@ if [ "$POSTGRES_PASSWORD" ]; then
 fi
 
 ################################################################################
+# Setup JAVA_OPTS
+if [ "$JAVA_OPTS_EXT" ]; then
+    cat <<EOF > /opt/sw360/bin/setenv.sh
+#!/usr/bin/env bash
+JAVA_OPTS="\$JAVA_OPTS $JAVA_OPTS_EXT"
+EOF
+fi
+
+################################################################################
 # Setup sw360
 mkdir -p /etc/sw360
 if [ "$SW360_PROPERTIES" ]; then
