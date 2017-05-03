@@ -175,6 +175,9 @@ services:
     #  - COUCHDB_PASSWORD=sw360fossy
     volumes:
       - ./_couchdb:/usr/local/var/lib/couchdb
+  sw360couchdb-lucene:
+    # environment:
+    #  - COUCHDB_PASSWORD=sw360fossy
 
 
   ##############################################################################
