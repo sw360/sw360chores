@@ -19,16 +19,6 @@ ENV _cleanup="eval apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/
 ENV _purge="apt-get purge -y --auto-remove"
 
 RUN set -x \
- && $_update && $_install ca-certificates wget && $_cleanup \
- && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
- && chmod +x /usr/local/bin/gosu \
- && wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
- && export GNUPGHOME="$(mktemp -d)" \
- && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
- && gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
- && rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc && $_purge ca-certificates
-
-RUN set -x \
  # && echo "deb http://ftp.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list \
  && echo "deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu xenial main" > /etc/apt/sources.list.d/backports.list \
  && $_update && $_install openjdk-8-jdk wget maven && $_cleanup \
