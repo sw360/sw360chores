@@ -6,26 +6,37 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM java:openjdk-8-jre-alpine
+# using the tomcat image grants us support for the Apache Tomcat Native library, which improves the performance
+FROM tomcat:8.5.14-jre8-alpine
 MAINTAINER admin@sw360.org
 
-RUN apk add --update bash
+RUN apk add --update bash openssl fontconfig
+
+ADD sw360_dependencies.tar.gz /opt
+WORKDIR /opt/sw360
+ENV CATALINA_HOME /opt/sw360
+ENV PATH $CATALINA_HOME/bin:$PATH
+ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
+ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
+
+ADD sw360_dependencies.tar.gz /opt
+RUN set -x\
+ && rm -rf $CATALINA_HOME/webapps/examples \
+            $CATALINA_HOME/webapps/docs \
+            $CATALINA_HOME/webapps/manager \
+            $CATALINA_HOME/webapps/host-manager \
+            $CATALINA_HOME/webapps/couchdb-lucene*war \
+            $CATALINA_HOME/webapps/ROOT \
+            $CATALINA_HOME/RELEASE-NOTES \
+            $CATALINA_HOME/RUNNING.txt \
+            $CATALINA_HOME/bin/*.bat \
+            $CATALINA_HOME/bin/*.tar.gz
+
+VOLUME [ "/opt/sw360" ]
 
 EXPOSE 8080
 EXPOSE 5005
 
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
-ADD sw360_dependencies.tar.gz /opt
-RUN  rm -rf /opt/sw360/webapps/examples \
-            /opt/sw360/webapps/docs \
-            /opt/sw360/webapps/host-manager \
-            /opt/sw360/webapps/couchdb-lucene*war \
-            /opt/sw360/RELEASE-NOTES \
-            /opt/sw360/RUNNING.txt \
-            /opt/sw360/bin/*.bat \
-            /opt/sw360/bin/*.tar.gz
-
-VOLUME [ "/opt/sw360" ]
-
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["tail", "-f", "/opt/sw360/logs/catalina.out"]
