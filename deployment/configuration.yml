@@ -42,7 +42,9 @@ services:
       ## the following variable contains configuration, which overwrite 
       # - |
       #   SW360_PROPERTIES=
-      #   schedule.cvesearch.firstOffset.seconds = 0
+ 
+
+     #   schedule.cvesearch.firstOffset.seconds = 0
       #   schedule.cvesearch.interval.seconds = 186400
       #   autostart = cvesearchServices
       #   clearing.teams=org1,org2,org3
@@ -170,6 +172,7 @@ services:
 
     volumes:
       - ./_deploy:/opt/sw360/deploy
+      # - ./_webapps:/opt/sw360/webapps
       - ./_logs:/opt/sw360/logs
 
   sw360postgres:
