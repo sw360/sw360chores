@@ -39,6 +39,10 @@
 
 set -e
 
+if [ ! -d /opt/sw360/webapps/ROOT ]; then
+    tar -zxf /opt/sw360/ROOT.tar.gz -C /opt/sw360/webapps/
+fi
+
 ################################################################################
 # Setup postgres
 sed -i 's/jdbc.default.url=.*/jdbc.default.url=jdbc:postgresql:\/\/'"${POSTGRES_HOST:-localhost}"':5432\/sw360pgdb/g' \

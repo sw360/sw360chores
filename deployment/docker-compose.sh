@@ -255,6 +255,10 @@ elif [ "$1" == "--backup" ]; then
 elif [ "$1" == "--restore" ]; then
     restore
 else
+    mkdir -p "$DIR/_couchdb"
+    mkdir -p "$DIR/_deploy"
+    mkdir -p "$DIR/_webapps"
+    mkdir -p "$DIR/_logs"
     cmdDockerCompose="$cmdDockerCompose $*"
     $cmdDockerCompose
 fi

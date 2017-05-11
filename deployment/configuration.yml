@@ -170,6 +170,7 @@ services:
 
     volumes:
       - ./_deploy:/opt/sw360/deploy
+      # - ./_webapps:/opt/sw360/webapps
       - ./_logs:/opt/sw360/logs
 
   sw360postgres:

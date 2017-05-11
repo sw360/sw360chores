@@ -22,15 +22,19 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 ADD sw360_dependencies.tar.gz /opt
 RUN set -x\
  && rm -rf $CATALINA_HOME/webapps/examples \
-            $CATALINA_HOME/webapps/docs \
-            $CATALINA_HOME/webapps/manager \
-            $CATALINA_HOME/webapps/host-manager \
-            $CATALINA_HOME/webapps/couchdb-lucene*war \
-            $CATALINA_HOME/webapps/ROOT \
-            $CATALINA_HOME/RELEASE-NOTES \
-            $CATALINA_HOME/RUNNING.txt \
-            $CATALINA_HOME/bin/*.bat \
-            $CATALINA_HOME/bin/*.tar.gz
+           $CATALINA_HOME/webapps/docs \
+           $CATALINA_HOME/webapps/manager \
+           $CATALINA_HOME/webapps/host-manager \
+           $CATALINA_HOME/webapps/couchdb-lucene*war \
+           $CATALINA_HOME/RELEASE-NOTES \
+           $CATALINA_HOME/RUNNING.txt \
+           $CATALINA_HOME/bin/*.bat \
+           $CATALINA_HOME/bin/*.tar.gz \
+ && ( \
+   cd $CATALINA_HOME/webapps/ \
+   && tar -zcf $CATALINA_HOME/ROOT.tar.gz ROOT \
+ ) \
+ && rm -rf $CATALINA_HOME/webapps/ROOT
 
 VOLUME [ "/opt/sw360" ]
 
