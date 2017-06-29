@@ -10,6 +10,9 @@
 
 # the used / parsed environmental variables are:
 #
+# to serve the tomcat logs under /logs
+#    $SERVE_LOGS
+#
 # for postgres configuration
 #    $POSTGRES_HOST (defaults to: "localhost")
 #    $POSTGRES_USER (optional)
@@ -38,6 +41,14 @@
 #    $LDAP_CREDENTIALS (e.g. Password)
 
 set -e
+
+if [ "$SERVE_LOGS" ]; then
+    cat <<EOF > /opt/sw360/conf/Catalina/localhost/logs.xml
+<Context override="true" docBase="/opt/sw360/logs/" path="/logs" />
+EOF
+else
+    rm -f /opt/sw360/conf/Catalina/localhost/logs.xml
+fi
 
 ################################################################################
 # Setup postgres
