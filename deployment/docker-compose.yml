@@ -97,6 +97,7 @@ services:
       - sw360couchdb
     environment:
       - COUCHDB_HOST=sw360couchdb
+      - COUCHDB_USER=sw360
 
 networks:
   sw360front:
