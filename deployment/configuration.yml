@@ -50,6 +50,11 @@ services:
       - POSTGRES_PASSWORD=sw360fossy
       # - COUCHDB_PASSWORD=sw360fossy
 
+      ## optimize JAVA_OPTS
+      ## this replaces all options added via setenv.sh in tomcat
+      ## see also ../packaging/static/apache-tomcat/setenv.sh
+      # - JAVA_OPTS_EXT=-Dfile.encoding=UTF8 -Xms2g -Xmx4g
+
       ## the following is also set in `docker-compose.cve-search-server.yml`
       # - CVE_SEARCH_HOST=https://cve.circl.lu/
 
