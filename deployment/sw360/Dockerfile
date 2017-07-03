@@ -6,35 +6,37 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM debian:jessie
+# using the tomcat image grants us support for the Apache Tomcat Native library, which improves the performance
+FROM tomcat:8.5.14-jre8-alpine
 MAINTAINER admin@sw360.org
-ENV DEBIAN_FRONTEND noninteractive
 
-ENV _update="apt-get update"
-ENV _install="apt-get install -y --no-install-recommends"
-ENV _cleanup="eval apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*"
+RUN apk add --update bash openssl fontconfig
 
-RUN set -x \
- && echo "deb http://ftp.debian.org/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list \
- && $_update && $_install openjdk-8-jre && $_cleanup \
- && update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java \
- && echo "JAVA_HOME=\"/usr/lib/jvm/java-8-openjdk-amd64/jre\"" >> /etc/environment
+ADD sw360_dependencies.tar.gz /opt
+WORKDIR /opt/sw360
+ENV CATALINA_HOME /opt/sw360
+ENV PATH $CATALINA_HOME/bin:$PATH
+ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
+ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
+
+ADD sw360_dependencies.tar.gz /opt
+RUN set -x\
+ && rm -rf $CATALINA_HOME/webapps/examples \
+            $CATALINA_HOME/webapps/docs \
+            $CATALINA_HOME/webapps/manager \
+            $CATALINA_HOME/webapps/host-manager \
+            $CATALINA_HOME/webapps/couchdb-lucene*war \
+            $CATALINA_HOME/webapps/ROOT \
+            $CATALINA_HOME/RELEASE-NOTES \
+            $CATALINA_HOME/RUNNING.txt \
+            $CATALINA_HOME/bin/*.bat \
+            $CATALINA_HOME/bin/*.tar.gz
+
+VOLUME [ "/opt/sw360" ]
 
 EXPOSE 8080
 EXPOSE 5005
 
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
-ADD sw360_dependencies.tar.gz /opt
-RUN  rm -rf /opt/sw360/webapps/examples \
-            /opt/sw360/webapps/docs \
-            /opt/sw360/webapps/host-manager \
-            /opt/sw360/webapps/couchdb-lucene*war \
-            /opt/sw360/RELEASE-NOTES \
-            /opt/sw360/RUNNING.txt \
-            /opt/sw360/bin/*.bat \
-            /opt/sw360/bin/*.tar.gz
-
-VOLUME [ "/opt/sw360" ]
-
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["tailf", "-0", "/opt/sw360/logs/catalina.out"]
+CMD ["tail", "-f", "/opt/sw360/logs/catalina.out"]

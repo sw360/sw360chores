@@ -19,8 +19,8 @@ namespace :docker do
     volume="-v #{ROOT}:/sw360chore"
     volume << " -v #{OUTPUT_DIR}:/sw360chore/_output"
     workdir="-w /sw360chore"
-    gosu="gosu $(id -u):$(id -g)"
-    sh "docker run -i #{volume} #{workdir} sw360/#{DEV_CONTAINER_NAME} #{gosu} #{cmd}"
+    chroot="chroot --userspec=$(id -u):$(id -g) --skip-chdir /"
+    sh "docker run -i #{volume} #{workdir} sw360/#{DEV_CONTAINER_NAME} #{chroot} #{cmd}"
   end
 
   desc "build the container and predeploy the wars in it"

@@ -23,7 +23,7 @@ services:
       - TOMCAT_DEBUG_PORT=5005
   sw360postgres:
     ports:
-      - 5432:5432
+      - 15432:5432
   sw360couchdb:
     ports:
       - 5984:5984

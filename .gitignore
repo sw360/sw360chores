@@ -1,6 +1,9 @@
 _*
 .vagrant
 *.tar.gz
+*.tar
+*.zip
 *.deb
+*.zip
 *.rpm
 .idea

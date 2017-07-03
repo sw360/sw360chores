@@ -56,18 +56,20 @@ Can be used in the same way as the direct docker-compose call up to minor change
 
 All allowed ways of calling this script:
 - generic calling of docker-compose commands
-     \$ $0 [--ignore-configuration-file] <some docker-compose arguments>
+    \$ $0 [--ignore-configuration-file] <some docker-compose arguments>
+    Example calls of this script as docker-compose wrapper:
+         \$ DEV_MODE=true $0 up -d
+         \$ $0 restart sw360
+         \$ $0 logs -f
+- \$ $0 \`--prepare\` create the dependencies for building the images, e.g.
+    - ./sw360/sw360_dependencies.tar.gz
+    - ./couchdb-lucene/couchdb-lucene-1.1.0-dist.zip
 - import and export of images
-     \$ $0 --save-images
-     \$ $0 --load-image]
+    \$ $0 --save-images
+    \$ $0 --load-image
 - backup and restore of volume data
-     \$ $0 --backup
-     \$ $0 --restore
-
-Example calls of this script as docker-compose wrapper:
-     \$ DEV_MODE=true $0 up -d
-     \$ $0 restart sw360
-     \$ $0 logs -f
+    \$ $0 --backup
+    \$ $0 --restore
 
 The environmental variables / inputs are set to
     DRY_RUN=$DRY_RUN
@@ -90,7 +92,10 @@ addSudoIfNeeded() {
 cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' proxy.env | xargs) docker"
 cmdDockerCompose="${cmdDocker}-compose -f $DIR/docker-compose.yml"
 [ "$DEV_MODE" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.dev.yml"
-[ "$CVE_SEARCH" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.cve-search-server.yml"
+[ "$CVE_SEARCH" == "true" ] && {
+    cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.cve-search-server.yml"
+    [ "$DEV_MODE" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.dev.cve-search-server.yml"
+}
 [ "$HTTPS_COUCHDB" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.couchdb-https.yml"
 
 ################################################################################
@@ -99,6 +104,18 @@ cmdDockerCompose="${cmdDocker}-compose -f $DIR/docker-compose.yml"
 # realpath is not available on macosx
 type "realpath" &> /dev/null || realpath() {
     cd "$1" && pwd
+}
+
+prepare() {
+    echo "prepare sw30 ..."
+    "$DIR/sw360/prepare.sh"
+    echo "prepare couchdb-lucene ..."
+    "$DIR/couchdb-lucene/prepare.sh"
+    [ "$CVE_SEARCH" == "true" ] && {
+        echo "prepare cve-search-server ..."
+        "$DIR/cve-search-server/prepare.sh"
+    }
+    exit 0
 }
 
 saveImages() {
@@ -111,6 +128,7 @@ saveImages() {
             echo "Save image $image to ./_images/$image.tar ..."
             $cmdDocker save -o "$DIR/_images/$image.tar" "$image"
         done
+    exit 0
 }
 
 loadImages() {
@@ -118,6 +136,7 @@ loadImages() {
         echo "load image $(basename "$imageArchive") ..."
         $cmdDocker load -i "$imageArchive"
     done
+    exit 0
 }
 
 backupVolumeOf() {
@@ -131,7 +150,7 @@ backupVolumeOf() {
                --volumes-from $containerId \
                -v "$(realpath $BACKUP_FOLDER):/backup" \
                debian:jessie \
-               tar cf "/backup/$backupFileName" ${volume}
+               tar cf --one-file-system "/backup/$backupFileName" ${volume}
 }
 
 backupAllVolumesOf() {
@@ -163,6 +182,7 @@ backup() {
     for containerId in "${containerIds[@]}"; do
         backupAllVolumesOf $containerId
     done
+    exit 0
 }
 
 restoreVolumeOf() {
@@ -219,11 +239,14 @@ restore() {
     for containerId in "${containerIds[@]}"; do
         restoreAllVolumesOf $containerId
     done
+    exit 0
 }
 
 ################################################################################
 # run the command:
-if [ "$1" == "--save-images" ]; then
+if [ "$1" == "--prepare" ]; then
+    prepare
+elif [ "$1" == "--save-images" ]; then
     saveImages
 elif [ "$1" == "--load-images" ]; then
     loadImages
