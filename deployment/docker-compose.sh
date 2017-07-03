@@ -22,6 +22,7 @@ else
 fi
 
 DEV_MODE=${DEV_MODE:-false}
+REST=${REST:-false}
 CVE_SEARCH=${CVE_SEARCH:-false}
 HTTPS_COUCHDB=${HTTPS_COUCHDB:-false}
 BACKUP_FOLDER=${BACKUP_FOLDER:-./_backup}
@@ -90,6 +91,7 @@ addSudoIfNeeded() {
 cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' proxy.env | xargs) docker"
 cmdDockerCompose="${cmdDocker}-compose -f $DIR/docker-compose.yml"
 [ "$DEV_MODE" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.dev.yml"
+[ "$REST" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.rest-server.yml"
 [ "$CVE_SEARCH" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.cve-search-server.yml"
 [ "$HTTPS_COUCHDB" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.couchdb-https.yml"
 

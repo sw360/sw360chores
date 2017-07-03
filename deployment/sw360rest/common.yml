@@ -6,8 +6,14 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-DEV_MODE=true
-# REST=false
-# CVE_SEARCH=false
-# HTTPS_COUCHDB=false
-# BACKUP_FOLDER=./_backup
+version: '2'
+services:
+  sw360restBase:
+    build:
+      context: .
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    image: sw360rest
+    restart: unless-stopped
