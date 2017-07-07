@@ -89,7 +89,7 @@ addSudoIfNeeded() {
     }
 }
 
-cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' proxy.env | xargs) docker"
+cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' "$DIR/proxy.env" | xargs) docker"
 cmdDockerCompose="${cmdDocker}-compose -f $DIR/docker-compose.yml"
 [ "$DEV_MODE" == "true" ] && cmdDockerCompose="$cmdDockerCompose -f $DIR/docker-compose.dev.yml"
 [ "$CVE_SEARCH" == "true" ] && {

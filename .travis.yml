@@ -1,0 +1,47 @@
+# -----------------------------------------------------------------------------
+# Copyright Siemens AG, 2017.
+# Part of the SW360 Portal Project.
+#
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved. This file is offered as-is,
+# without any warranty.
+# -----------------------------------------------------------------------------
+dist: trusty
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - curl -L https://github.com/docker/compose/releases/download/1.14.0/docker-compose-`uname -s`-`uname -m` | sudo tee /usr/local/bin/docker-compose > /dev/null
+  - sudo chmod +x /usr/local/bin/docker-compose
+  
+install:
+  - set -e
+  - echo "$CONFIGURATION_ENV" >> deployment/configuration.env
+  - ./deployment/docker-compose.sh --prepare
+  - ./deployment/docker-compose.sh build
+  - ./deployment/docker-compose.sh up -d
+  - sleep 120
+
+before_script:
+  - netstat -tulpn
+  - docker images
+  - docker network ls
+  - docker ps
+  - ./deployment/docker-compose.sh logs --tail=500
+
+after_failure:
+  - cat ./deployment/_logs/localhost_access_log*
+  - ./deployment/docker-compose.sh logs --tail=500
+
+env: CONFIGURATION_ENV=""
+
+script: .travis/testDockerComposeDeployment.sh
+
+matrix:
+  include:
+    - env: CONFIGURATION_ENV=""
+    - env: CONFIGURATION_ENV="CVE_SEARCH=true"
+    - env: CONFIGURATION_ENV="DEV_MODE=false"
