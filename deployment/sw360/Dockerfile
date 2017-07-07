@@ -12,7 +12,6 @@ MAINTAINER admin@sw360.org
 
 RUN apk add --update bash openssl fontconfig
 
-ADD sw360_dependencies.tar.gz /opt
 WORKDIR /opt/sw360
 ENV CATALINA_HOME /opt/sw360
 ENV PATH $CATALINA_HOME/bin:$PATH
@@ -26,7 +25,6 @@ RUN set -x\
             $CATALINA_HOME/webapps/manager \
             $CATALINA_HOME/webapps/host-manager \
             $CATALINA_HOME/webapps/couchdb-lucene*war \
-            $CATALINA_HOME/webapps/ROOT \
             $CATALINA_HOME/RELEASE-NOTES \
             $CATALINA_HOME/RUNNING.txt \
             $CATALINA_HOME/bin/*.bat \
