@@ -58,7 +58,7 @@ server {
 
     server_name ${HOST}.localdomain;
 
-    location ~* /(${RESTRICTED_URLS})/ {
+    location ~* ^/(${RESTRICTED_URLS})/ {
         deny all;
     }
 
