@@ -10,7 +10,7 @@
 FROM tomcat:8.5.14-jre8-alpine
 MAINTAINER admin@sw360.org
 
-RUN apk add --update bash openssl fontconfig
+RUN apk add --update bash openssl fontconfig ttf-dejavu
 
 WORKDIR /opt/sw360
 ENV CATALINA_HOME /opt/sw360
