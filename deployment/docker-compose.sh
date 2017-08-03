@@ -51,8 +51,8 @@ Can be used in the same way as the direct docker-compose call up to minor change
    - \`--ignore-configuration-file\` (do not build the \`-f\` part automatically)
    - \`--save-images\` (saves all images related to the current configuration to \`./_images/\`)
    - \`--load-images\` (loads all images in \`./_images/\` into docker)
-   - \`--backup` (backups all volumes to the path defined in \$BACKUP_FOLDER)
-   - \`--restore` (restores all volumes from the path defined in \$BACKUP_FOLDER)
+   - \`--backup\` (backups all volumes to the path defined in \$BACKUP_FOLDER)
+   - \`--restore\` (restores all volumes from the path defined in \$BACKUP_FOLDER)
 
 All allowed ways of calling this script:
 - generic calling of docker-compose commands
