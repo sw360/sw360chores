@@ -70,6 +70,16 @@ server {
         proxy_pass  http://${HOST}-app;
         proxy_read_timeout 3600s;
     }
+
+    location ~*  \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header expires 7d;
+        proxy_redirect off;
+        proxy_pass  http://${HOST}-app;
+        proxy_read_timeout 3600s;
+    }
 }
 EOF
 
