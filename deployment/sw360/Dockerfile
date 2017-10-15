@@ -28,7 +28,12 @@ RUN set -x\
             $CATALINA_HOME/RELEASE-NOTES \
             $CATALINA_HOME/RUNNING.txt \
             $CATALINA_HOME/bin/*.bat \
-            $CATALINA_HOME/bin/*.tar.gz
+            $CATALINA_HOME/bin/*.tar.gz \
+ && ( \
+   cd $CATALINA_HOME/webapps/ \
+   && tar -zcf $CATALINA_HOME/ROOT.tar.gz ROOT \
+ ) \
+ && rm -rf $CATALINA_HOME/webapps/ROOT
 
 VOLUME [ "/opt/sw360" ]
 
