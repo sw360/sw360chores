@@ -150,7 +150,9 @@ backupVolumeOf() {
                --volumes-from $containerId \
                -v "$(realpath $BACKUP_FOLDER):/backup" \
                debian:jessie \
-               tar cf --one-file-system "/backup/$backupFileName" ${volume}
+               tar --one-file-system -cf "/backup/$backupFileName" "$volume" || {
+        echo -e "ERROR: backup failed"
+    }
 }
 
 backupAllVolumesOf() {
