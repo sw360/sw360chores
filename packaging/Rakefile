@@ -21,7 +21,7 @@ task :default => :all
 def wget(urls)
   urls.each do |url|
     mkdir_p CACHE_DIR
-    sh "wget -c -N -P #{CACHE_DIR} #{url}"
+    sh "wget -q -c -N -P #{CACHE_DIR} #{url}"
   end
 end
 
