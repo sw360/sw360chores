@@ -70,6 +70,9 @@ All allowed ways of calling this script:
 - backup and restore of volume data
     \$ $0 --backup
     \$ $0 --restore
+- cleanup
+    \$ $0 --cleanup # cleanup docker containers
+    \$ $0 --cleanup-all # also cleanup the prepare step
 
 The environmental variables / inputs are set to
     DRY_RUN=$DRY_RUN
@@ -107,13 +110,37 @@ type "realpath" &> /dev/null || realpath() {
 }
 
 prepare() {
-    echo "prepare sw30 ..."
+    echo "prepare sw360 ..."
     "$DIR/sw360/prepare.sh"
     echo "prepare couchdb-lucene ..."
     "$DIR/couchdb-lucene/prepare.sh"
     [ "$CVE_SEARCH" == "true" ] && {
         echo "prepare cve-search-server ..."
         "$DIR/cve-search-server/prepare.sh"
+    }
+    exit 0
+}
+
+cleanupDocker() {
+    cmdDockerCompose="$cmdDockerCompose ps -q"
+    containerIds=( $($cmdDockerCompose | xargs) )
+    for containerId in "${containerIds[@]}"; do
+        cmdForImage="$cmdDocker inspect --format {{.Config.Image}} $containerId"
+        image="$($cmdForImage)"
+
+        $cmdDocker rm $containerId || echo "failed to remove container=$containerId"
+        $cmdDocker rmi $image || echo "failed to remove image=$image"
+    done
+}
+
+cleanupCache() {
+    echo "cleanup sw360 ..."
+    "$DIR/sw360/cleanup.sh"
+    echo "cleanup couchdb-lucene ..."
+    "$DIR/couchdb-lucene/cleanup.sh"
+    [ "$CVE_SEARCH" == "true" ] && {
+        echo "cleanup cve-search-server ..."
+        "$DIR/cve-search-server/cleanup.sh"
     }
     exit 0
 }
@@ -248,6 +275,11 @@ restore() {
 # run the command:
 if [ "$1" == "--prepare" ]; then
     prepare
+elif [ "$1" == "--cleanup" ]; then
+    cleanupDocker
+elif [ "$1" == "--cleanup-all" ]; then
+    cleanupDocker
+    cleanupCache
 elif [ "$1" == "--save-images" ]; then
     saveImages
 elif [ "$1" == "--load-images" ]; then
