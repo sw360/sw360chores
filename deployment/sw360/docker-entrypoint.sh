@@ -88,14 +88,15 @@ echo >> /etc/sw360/couchdb.properties
 if [ "$HTTPS_HOSTS" ]; then
     for HOST in $(echo $HTTPS_HOSTS | sed "s/,/ /g"); do
         echo "Trust certificate of host $HOST ..."
+        OUT="$(mktemp).crt"
         openssl s_client -connect "${HOST}" < /dev/null \
-            | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > public.crt
+            | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > $OUT
 
         keytool -keystore "$JAVA_HOME/lib/security/cacerts" \
                 -alias "$HOST" \
                 -storepass changeit \
                 -noprompt \
-                -import -file public.crt || continue
+                -import -file $OUT || echo "INFO: certificate from $HOST was not imported"
     done
 fi
 
@@ -113,14 +114,15 @@ fi
 if [ "$TRUSTED_CACERTS" ]; then
     for CERT_NAME in $(echo $TRUSTED_CACERTS | sed "s/,/ /g"); do
         if [ "${!CERT_NAME}" ]; then
-          echo "Trust certificate $CERT_NAME ..."
-          OUT="$(mktemp).crt"
-          echo -e "${!CERT_NAME}" > $OUT
-          keytool -keystore "$JAVA_HOME/lib/security/cacerts" \
-                  -alias "$CERT_NAME" \
-                  -storepass changeit \
-                  -noprompt \
-                  -import -file $OUT
+            echo "Trust certificate $CERT_NAME ..."
+            OUT="$(mktemp).crt"
+            echo -e "${!CERT_NAME}" > $OUT
+
+            keytool -keystore "$JAVA_HOME/lib/security/cacerts" \
+                    -alias "$CERT_NAME" \
+                    -storepass changeit \
+                    -noprompt \
+                    -import -file $OUT || echo "INFO: certificate $CERT_NAME was not imported"
         fi
     done
 fi
