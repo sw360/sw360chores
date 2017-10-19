@@ -21,6 +21,7 @@ services:
       - 5005:5005
     environment:
       - TOMCAT_DEBUG_PORT=5005
+      - SERVE_LOGS=1
   sw360postgres:
     ports:
       - 15432:5432
