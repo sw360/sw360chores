@@ -8,7 +8,7 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-set -ex
+set -e
 
 if [ ! "$COUCHDB_HOST" ]; then
     echo "the environmental variable \$COUCHDB_HOST must be set"
