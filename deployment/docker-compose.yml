@@ -98,6 +98,9 @@ services:
     environment:
       - COUCHDB_HOST=sw360couchdb
       - COUCHDB_USER=sw360
+    extends:
+      file: configuration.yml
+      service: sw360couchdb-lucene
 
 networks:
   sw360front:
