@@ -38,7 +38,7 @@ services:
     # dns:
     #   - 8.8.8.8
     environment:
-      # - PORT=8443
+      - PORT=8443
       ## the following variable contains configuration, which overwrite 
       # - |
       #   SW360_PROPERTIES=
@@ -46,9 +46,6 @@ services:
       #   schedule.cvesearch.interval.seconds = 186400
       #   autostart = cvesearchServices
       #   clearing.teams=org1,org2,org3
-
-      - POSTGRES_PASSWORD=sw360fossy
-      # - COUCHDB_PASSWORD=sw360fossy
 
       ## optimize JAVA_OPTS
       ## this replaces all options added via setenv.sh in tomcat
@@ -115,11 +112,11 @@ services:
       #   AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
       #   -----END CERTIFICATE-----
 
-      ## the variable $LDAP_CONFIGURATION can contain the full LDAP configuration
-      ## and will be appended to portal-ext.properties. It can be defined in the
-      ## following way:
+      ## the variable $PORTAL_EXT_PROPERTIES can contain the full LDAP configuration
+      ## and will be appended to /etc/sw360/portal-ext.properties. It can be defined
+      ## in the following way:
       # - |
-      #   LDAP_CONFIGURATION=
+      #   PORTAL_EXT_PROPERTIES=
       #   ldap.auth.enabled=true
       #   ldap.password.policy.enabled=true
       #
@@ -167,27 +164,3 @@ services:
       #   ##
       #   ## The prefix "mapping." is mandatory.
       #   ## ".target" is appended to every key to find the mapped organization name
-
-    volumes:
-      - ./_deploy:/opt/sw360/deploy
-      - ./_logs:/opt/sw360/logs
-
-  sw360postgres:
-    environment:
-      - POSTGRES_PASSWORD=sw360fossy
-
-  sw360couchdb:
-    # environment:
-    #  - COUCHDB_PASSWORD=sw360fossy
-    volumes:
-      - ./_couchdb:/usr/local/var/lib/couchdb
-  sw360couchdb-lucene:
-    # environment:
-    #  - COUCHDB_PASSWORD=sw360fossy
-
-
-  ##############################################################################
-  ## used by cve-search (see docker-compose.cve-search-server.yml)
-  sw360mongodb:
-    volumes:
-      - ./_mongodb:/data/db

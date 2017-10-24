@@ -14,6 +14,7 @@ ADD ./couchdb-lucene-1.1.0-dist.zip /
 RUN set -ex \
  && apk add --update unzip \
  && unzip /couchdb-lucene-1.1.0-dist.zip \
+ && apk del unzip \
  && mv /couchdb-lucene-1.1.0 /couchdb-lucene
 
 EXPOSE 5985

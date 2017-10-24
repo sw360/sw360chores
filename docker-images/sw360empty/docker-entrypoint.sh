@@ -10,6 +10,11 @@
 
 # the used / parsed environmental variables are:
 #
+# for liferay
+#    $PORTAL_EXT_PROPERTIES (dafaults to: "")
+#    $PROTOCOL (defaults to: "https")
+#    $PORT (defaults to: "8443")
+#
 # for postgres configuration
 #    $POSTGRES_HOST (defaults to: "localhost")
 #    $POSTGRES_USER (optional)
@@ -27,10 +32,6 @@
 # for setting up cve-search connection
 #    $CVE_SEARCH_HOST (optional)
 #
-# for sw360 configuration
-#    $PROTOCOL (defaults to: "https")
-#    $PORT (defaults to: "8443")
-#
 # for LDAP configuration
 #    $LDAP_HOST (e.g. ldap://10.1.2.100:389)
 #    $LDAP_BASE_DN (e.g. ou=Users,o=Example)
@@ -40,19 +41,6 @@
 set -e
 
 ################################################################################
-# Setup postgres
-sed -i 's/jdbc.default.url=.*/jdbc.default.url=jdbc:postgresql:\/\/'"${POSTGRES_HOST:-localhost}"':5432\/sw360pgdb/g' \
-    /opt/sw360/webapps/ROOT/WEB-INF/classes/portal-ext.properties
-if [ "$POSTGRES_USER" ]; then
-    sed -i 's/jdbc.default.username=.*/jdbc.default.username='"$POSTGRES_USER"'/g' \
-        /opt/sw360/webapps/ROOT/WEB-INF/classes/portal-ext.properties
-fi
-if [ "$POSTGRES_PASSWORD" ]; then
-    sed -i 's/jdbc.default.password=.*/jdbc.default.password='"$POSTGRES_PASSWORD"'/g' \
-        /opt/sw360/webapps/ROOT/WEB-INF/classes/portal-ext.properties
-fi
-
-################################################################################
 # Setup JAVA_OPTS
 if [ "$JAVA_OPTS_EXT" ]; then
     cat <<EOF > /opt/sw360/bin/setenv.sh
@@ -60,6 +48,31 @@ if [ "$JAVA_OPTS_EXT" ]; then
 JAVA_OPTS="\$JAVA_OPTS $JAVA_OPTS_EXT"
 EOF
 fi
+
+################################################################################
+# Setup liferay
+mkdir -p /etc/sw360/
+EXT_PROPERTIES_FILE=/etc/sw360/portal-ext.properties
+echo > $EXT_PROPERTIES_FILE
+if [[ $PORTAL_EXT_PROPERTIES ]]; then
+    echo -e "$PORTAL_EXT_PROPERTIES" >> $EXT_PROPERTIES_FILE
+fi
+if [[ $PORT ]]; then
+    echo "web.server.https.port=$PORT" >> $EXT_PROPERTIES_FILE
+fi
+
+# Setup postgres for liferay
+if [ ! "$POSTGRES_HOST" ] || [ ! "$POSTGRES_USER" ] || [ ! "$POSTGRES_PASSWORD" ]; then
+    echo "postgres configuration incomplete"
+    exit 1
+fi
+cat <<EOF >> $EXT_PROPERTIES_FILE
+jdbc.default.driverClassName=org.postgresql.Driver
+jdbc.default.url=jdbc:postgresql://${POSTGRES_HOST:-localhost}:5432/sw360pgdb
+jdbc.default.username=$POSTGRES_USER
+jdbc.default.password=$POSTGRES_PASSWORD
+EOF
+export DB_TYPE=POSTGRESQL
 
 ################################################################################
 # Setup sw360
@@ -125,7 +138,6 @@ if [ "$TRUSTED_CACERTS" ]; then
     done
 fi
 
-
 ################################################################################
 # Setup for cve-search
 if [ "$CVE_SEARCH_HOST" ]; then
@@ -151,39 +163,10 @@ if [ "$FOSSOLOGY_HOST" ] && [ "$FOSSOLOGY_PORT" ]; then
 fi
 
 ################################################################################
-# modify portal ext properties
-addToPortalExtProperties() {
-    if [[ $1 == *"="* ]]; then
-        file="/opt/sw360/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
-        key="$( cut -d '=' -f 1 <<< "$1" )"
-        if grep -q "$key" $file; then
-            sed -i -r 's/'"$key"'=.*/'"$(sed -e 's/[\/&]/\\&/g' <<< "$1")"'/g' $file
-        else
-            echo "$1" >> $file
-        fi
-    fi
-}
-
-# Setup for nginx with https
-addToPortalExtProperties "web.server.protocol=${PROTOCOL:-https}"
-addToPortalExtProperties "web.server.${PROTOCOL:-http}.port=${PORT:-8443}"
-
-
-# Setup for authentification with ldap
-if [[ $LDAP_CONFIGURATION ]]; then
-    while read -r line; do
-        addToPortalExtProperties "$line"
-    done <<< "$LDAP_CONFIGURATION"
-fi
-
-################################################################################
-
 # Setup for ldap importer
 mkdir -p /etc/ldap-importer
 if [[ $LDAP_IMPORTER_CONFIGURATION ]]; then
-  while read -r line; do
-    echo $line >> /etc/ldap-importer/ldapimporter.properties
-  done <<< "$LDAP_IMPORTER_CONFIGURATION"
+    echo -e "$LDAP_IMPORTER_CONFIGURATION" >> /etc/ldap-importer/ldapimporter.properties
 fi
 
 ################################################################################
@@ -193,7 +176,7 @@ if [ "$TOMCAT_DEBUG_PORT" ] && [[ "$TOMCAT_DEBUG_PORT" =~ ^[0-9]+$ ]]; then
     CATALINA_OPTS+="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${TOMCAT_DEBUG_PORT} "
     CATALINA_OPTS+="-Dorg.ektorp.support.AutoUpdateViewOnChange=true "
 fi
-CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/bin/startup.sh
+DB_TYPE="$DB_TYPE" CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/bin/startup.sh
 
 ################################################################################
 exec "$@"

@@ -13,9 +13,12 @@
 version: '2'
 services:
 
+  sw360:
+    image: sw360/sw360populated
+
   sw360nginxCouchdb:
-    build: ./sw360nginx/
-    image: sw360nginx
+    container_name: sw360nginxCouchdb
+    image: sw360/sw360nginx
     restart: unless-stopped
     ports:
       - 9443:8443
@@ -27,5 +30,5 @@ services:
       - HOST=sw360couchdb
       - HOST_PORT=5984
     extends:
-      file: configuration.yml
+      file: ../configuration.yml
       service: sw360nginx
