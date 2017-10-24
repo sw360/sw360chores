@@ -19,7 +19,8 @@ ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
 ADD sw360_dependencies.tar.gz /opt
-RUN set -x\
+RUN set -x \
+ && mkdir -p /usr/lib/jvm/default-jvm/lib/security/ \
  && rm -rf $CATALINA_HOME/webapps/examples \
             $CATALINA_HOME/webapps/docs \
             $CATALINA_HOME/webapps/manager \
