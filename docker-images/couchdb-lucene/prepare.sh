@@ -10,8 +10,8 @@
 
 set -e
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd )"
-BRANCH="v1.1.0"
-TARGET="couchdb-lucene-1.1.0-dist.zip"
+BRANCH="v2.1.0"
+TARGET="couchdb-lucene-2.1.0-dist.zip"
 
 if [ ! -f "$DIR/$TARGET" ]; then
     ################################################################################
@@ -22,18 +22,18 @@ if [ ! -f "$DIR/$TARGET" ]; then
         }
     }
 
-    cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' $DIR/../proxy.env | xargs) docker"
+    cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' $DIR/../../proxy.env | xargs) docker"
 
     ################################################################################
-    # create and place the file ./couchdb-lucene-1.1.0-dist.zip
-    TMPDIR=$(mktemp -d)
+    # create and place the file $TARGET
+    TMP=$(mktemp -d)
     env $(grep -v '^#' "$DIR/../proxy.env" | xargs) \
-        git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMPDIR/couchdb-lucene.git"
+        git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMP/couchdb-lucene.git"
 
     $cmdDocker pull maven:3-jdk-8-alpine
     $cmdDocker run -i \
                --cap-drop=all --user "${UID}" \
-               -v "$TMPDIR/couchdb-lucene.git:/couchdb-lucene" \
+               -v "$TMP/couchdb-lucene.git:/couchdb-lucene" \
                --env http_proxy \
                --env https_proxy \
                --env no_proxy \
@@ -41,8 +41,8 @@ if [ ! -f "$DIR/$TARGET" ]; then
                -w /couchdb-lucene \
                maven:3-jdk-8-alpine \
                mvn
-    cp "$TMPDIR/couchdb-lucene.git/target/$TARGET" "$DIR"
-    rm -rf "$TMPDIR"
+    cp "$TMP/couchdb-lucene.git/target/$TARGET" "$DIR"
+    rm -rf "$TMP"
 else
     echo "... the file $TARGET already exists: skip"
 fi

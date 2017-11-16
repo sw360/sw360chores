@@ -10,12 +10,12 @@ FROM java:openjdk-8-jre-alpine
 MAINTAINER admin@sw360.org
 
 WORKDIR /
-ADD ./couchdb-lucene-1.1.0-dist.zip /
+ADD ./couchdb-lucene-2.1.0-dist.zip /
 RUN set -ex \
  && apk add --update unzip \
- && unzip /couchdb-lucene-1.1.0-dist.zip \
+ && unzip /couchdb-lucene-2.1.0-dist.zip \
  && apk del unzip \
- && mv /couchdb-lucene-1.1.0 /couchdb-lucene
+ && mv /couchdb-lucene-2.1.0 /couchdb-lucene
 
 EXPOSE 5985
 

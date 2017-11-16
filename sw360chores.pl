@@ -163,7 +163,7 @@ chdir dirname(realpath($0));
         if ($prod) {
             push(@toCall, "-f", "deployment/docker-compose.prod.yml");
         }else{
-            mkdir "deployment/_deploy" if ! -d "deployment/_deploy";
+            mkdir "_deploy" if ! -d "_deploy";
             push(@toCall, "-f", "deployment/docker-compose.dev.yml");
             if($cveSearch) {
                 push(@toCall, "-f", "deployment/docker-compose.dev.cve-search-server.yml");

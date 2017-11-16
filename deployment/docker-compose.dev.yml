@@ -24,7 +24,7 @@ services:
     environment:
       - TOMCAT_DEBUG_PORT=5005
     volumes:
-      - ./_deploy:/opt/sw360/deploy
+      - ../_deploy:/opt/sw360/deploy
 
   sw360postgres:
     ports:
