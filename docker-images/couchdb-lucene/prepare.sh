@@ -26,7 +26,7 @@ if [ ! -f "$DIR/$TARGET" ]; then
 
     ################################################################################
     # create and place the file $TARGET
-    TMP=$(mktemp -d)
+    TMP=$(mktemp -d $TMPDIR/tmp.XXXXXXX)
     env $(grep -v '^#' "$DIR/../proxy.env" | xargs) \
         git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMP/couchdb-lucene.git"
 

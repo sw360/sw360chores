@@ -17,6 +17,7 @@ use Pod::Usage;
   # options
   ## handling images:
     ./sw360chores.pl [switches] [--build] [--save-images]
+    ./sw360chores.pl [--cve-search] --prod --build --webapps=s --deploy=s [--save-images]
   ## cleanup state and images
     ./sw360chores.pl [switches] --cleanup
   ## deploy war files
@@ -33,6 +34,12 @@ use Pod::Usage;
   ## enable cve-search server
     ./sw360chores.pl --cve-search [options] [-- arguments for docker-compose]
 
+  # evironmental variables
+    $SW360CHORES_VERSION
+      is the version of the chores containers which will be used for tagging
+    $SW360_VERSION
+      is the version of sw360 which will be used for tagging the productive filled image
+
   # examples:
   ## build and pull all Images, start the containers and detach:
     ./sw360chores.pl --build -- up -d
@@ -40,6 +47,8 @@ use Pod::Usage;
     ./sw360chores.pl --prod -- logs -f sw360
   ## build and save all images
     ./sw360chores.pl --build --save-images
+  ## build, tag and save all images including the filled sw360 container. It will be populated with the wars from ./_webapps and ./_deploy
+    SW360CHORES_VERSION="3.1.0" SW360_VERSION="3.1.0-SNAPSHOT" ./sw360chores.pl --prod --build --webapps=./_webapps --deploy=./_deploy --save-images
   ## rebuild from scratch
     ./sw360chores.pl --cleanup --build
 
@@ -95,6 +104,12 @@ if($cveSearch) {
 
 ################################################################################
 chdir dirname(realpath($0));
+
+if ("$^O" eq "darwin") { # setup tempdir for darwin
+    my $tmpdir = "./_tmp";
+    mkdir $tmpdir if ! -d $tmpdir;
+    $ENV{TMPDIR} = realpath($tmpdir);
+}
 
 ################################################################################
 { # docker
@@ -329,7 +344,7 @@ sub cleanupAll {
     }; warn $@ if $@;
     chomp(my @images = dockerComposeRet(("images", "-q")));
     eval {
-        dockerCompose(("rm"));
+        dockerCompose(("down"));
     }; warn $@ if $@;
     foreach my $imageId (@images) {
         dockerRmi $imageId;
