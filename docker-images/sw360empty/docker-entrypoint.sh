@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright Bosch Software Innovations GmbH, 2016.
+# Copyright Bosch Software Innovations GmbH, 2016 - 2017.
 # Part of the SW360 Portal Project.
 #
 # All rights reserved. This program and the accompanying materials
@@ -11,32 +11,30 @@
 # the used / parsed environmental variables are:
 #
 # for liferay
-#    $PORTAL_EXT_PROPERTIES (dafaults to: "")
-#    $PROTOCOL (defaults to: "https")
-#    $PORT (defaults to: "8443")
+#    $PORTAL_EXT_PROPERTIES (optional)
+#    $PORT (optional)
 #
 # for postgres configuration
-#    $POSTGRES_HOST (defaults to: "localhost")
-#    $POSTGRES_USER (optional)
-#    $POSTGRES_PASSWORD (optional)
+#    $POSTGRES_HOST
+#    $POSTGRES_USER
+#    $POSTGRES_PASSWORD
 #
 # for couchdb configuration
-#    $COUCHDB_HOST (defaults to: "localhost")
+#    $COUCHDB_HOST
 #    $COUCHDB_USER (optional)
 #    $COUCHDB_PASSWORD (optional)
 #
 # for trusting SSL certificates
 #    $HTTPS_HOSTS (optional)
-#    $JAVA_HOME (defaults to: path where java lies)
 #
 # for setting up cve-search connection
 #    $CVE_SEARCH_HOST (optional)
 #
-# for LDAP configuration
-#    $LDAP_HOST (e.g. ldap://10.1.2.100:389)
-#    $LDAP_BASE_DN (e.g. ou=Users,o=Example)
-#    $LDAP_PRINCIPAL (e.g. cn=LDAP1,ou=Users,o=Example)
-#    $LDAP_CREDENTIALS (e.g. Password)
+# for configuring ldap importer
+#    $LDAP_IMPORTER_CONFIGURATION (optional)
+#
+# for debugging
+#    $TOMCAT_DEBUG_PORT (optional)
 
 set -e
 
@@ -83,6 +81,10 @@ fi
 
 ################################################################################
 # Setup couchdb
+if [ ! "$COUCHDB_HOST" ]; then
+    echo "couchdb configuration incomplete"
+    exit 1
+fi
 echo "couchdb.url = http://${COUCHDB_HOST:-localhost}:5984" > /etc/sw360/couchdb.properties
 if [ "$COUCHDB_USER" ]; then
     echo "couchdb.user = $COUCHDB_USER" >> /etc/sw360/couchdb.properties
@@ -171,10 +173,9 @@ fi
 
 ################################################################################
 # Startup apache
-CATALINA_OPTS=""
+CATALINA_OPTS="-Dorg.ektorp.support.AutoUpdateViewOnChange=true"
 if [ "$TOMCAT_DEBUG_PORT" ] && [[ "$TOMCAT_DEBUG_PORT" =~ ^[0-9]+$ ]]; then
-    CATALINA_OPTS+="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${TOMCAT_DEBUG_PORT} "
-    CATALINA_OPTS+="-Dorg.ektorp.support.AutoUpdateViewOnChange=true "
+    CATALINA_OPTS+=" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${TOMCAT_DEBUG_PORT}"
 fi
 DB_TYPE="$DB_TYPE" CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/bin/startup.sh
 

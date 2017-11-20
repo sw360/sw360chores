@@ -6,7 +6,7 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM klaemo/couchdb:1.6.1
+FROM couchdb:1.7.1
 MAINTAINER admin@sw360.org
 
 COPY docker-entrypoint.overlay.sh /docker-entrypoint.overlay.sh

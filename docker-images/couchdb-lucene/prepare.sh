@@ -22,13 +22,15 @@ if [ ! -f "$DIR/$TARGET" ]; then
         }
     }
 
-    cmdDocker="$(addSudoIfNeeded) env $(grep -v '^#' $DIR/../../proxy.env | xargs) docker"
+    if [[ -f $DIR/../../proxy.env ]]; then
+        source $DIR/../../proxy.env
+    fi
+    cmdDocker="$(addSudoIfNeeded) docker"
 
     ################################################################################
     # create and place the file $TARGET
-    TMP=$(mktemp -d $TMPDIR/tmp.XXXXXXX)
-    env $(grep -v '^#' "$DIR/../proxy.env" | xargs) \
-        git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMP/couchdb-lucene.git"
+    TMP=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXX)
+    git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMP/couchdb-lucene.git"
 
     $cmdDocker pull maven:3-jdk-8-alpine
     $cmdDocker run -i \

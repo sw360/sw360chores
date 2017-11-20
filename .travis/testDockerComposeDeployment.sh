@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------------------------
 # Copyright Siemens AG, 2017.
+# Copyright Bosch Software Innovations GmbH, 2017.
 # Part of the SW360 Portal Project.
 #
 # Copying and distribution of this file, with or without modification,

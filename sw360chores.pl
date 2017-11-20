@@ -1,4 +1,13 @@
 #!/usr/bin/env perl
+
+# Copyright Bosch Software Innovations GmbH, 2017.
+# Part of the SW360 Portal Project.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+
 use strict;
 use warnings;
 use autodie;
@@ -523,20 +532,22 @@ sub restoreVolumes {
 backupVolumes() if $backupDir && !$restoreDir;
 
 cleanupAll() if $cleanup;
+
 buildAllBase() if $build;
-
-restoreVolumes() if $restoreDir && !$backupDir;
-
-if (! $prod) {
-    copyToSW360Container($cpWebappsDir, "/opt/sw360/webapps") if $cpWebappsDir;
-    copyToSW360Container($cpDeployDir, "/opt/sw360/deploy") if $cpDeployDir;
-} else {
+if ($prod) {
     buildPopulatedSW360() if $build;
 }
+
+restoreVolumes() if $restoreDir && !$backupDir;
 
 pushAll($pushTo) if $pushTo;
 saveAll() if $save;
 
 if (defined $ARGV[0]) {
     dockerCompose(@ARGV);
+}
+
+if (! $prod) {
+    copyToSW360Container($cpWebappsDir, "/opt/sw360/webapps") if $cpWebappsDir;
+    copyToSW360Container($cpDeployDir, "/opt/sw360/deploy") if $cpDeployDir;
 }
