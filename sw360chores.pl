@@ -16,7 +16,7 @@ use Pod::Usage;
 
   # options
   ## handling images:
-    ./sw360chores.pl [switches] [--build] [--save-images]
+    ./sw360chores.pl [switches] [--build] [--push-to=s] [--save-images]
     ./sw360chores.pl [--cve-search] --prod --build --webapps=s --deploy=s [--save-images]
   ## cleanup state and images
     ./sw360chores.pl [switches] --cleanup
@@ -48,7 +48,7 @@ use Pod::Usage;
   ## build and save all images
     ./sw360chores.pl --build --save-images
   ## build, tag and save all images including the filled sw360 container. It will be populated with the wars from ./_webapps and ./_deploy
-    SW360CHORES_VERSION="3.1.0" SW360_VERSION="3.1.0-SNAPSHOT" ./sw360chores.pl --prod --build --webapps=./_webapps --deploy=./_deploy --save-images
+    SW360CHORES_VERSION="3.1.0" SW360_VERSION="3.1.0-SNAPSHOT" ./sw360chores.pl --prod --build --webapps=./_webapps --deploy=./_deploy --push-to=localhost:5000
   ## rebuild from scratch
     ./sw360chores.pl --cleanup --build
 
@@ -56,6 +56,7 @@ use Pod::Usage;
 
 my $build = '';
 my $save = '';
+my $pushTo = '';
 my $cleanup = '';
 my $prod = '';
 my $cveSearch = '';
@@ -68,7 +69,7 @@ GetOptions (
     'build' => \$build,
     'save|save-images' => \$save,
     'load|load-images' => sub {die "not implemented yet"},
-    'push-to=s' => sub {die "not implemented yet"},
+    'push-to=s' => \$pushTo,
     # cleanup
     'cleanup' => \$cleanup,
     # control runtime
@@ -101,6 +102,7 @@ my @imagesToBuild = ("sw360empty", "couchdb-lucene", "sw360couchdb", "sw360nginx
 if($cveSearch) {
     push(@imagesToBuild, "cve-search-server");
 }
+my $sw360populatedName = "sw360populated";
 
 ################################################################################
 chdir dirname(realpath($0));
@@ -211,6 +213,9 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
 
         if(defined $ENV{'SW360CHORES_VERSION'}){
             unshift @args, ("-t", "sw360/${name}:$ENV{'SW360CHORES_VERSION'}");
+            if(defined $ENV{'BUILD_NUMBER'}){
+                unshift @args, ("-t", "sw360/${name}:$ENV{'SW360CHORES_VERSION'}.$ENV{'BUILD_NUMBER'}");
+            }
         }
         unshift @args, ("build", "-t", "sw360/$name", "--rm=true", "--force-rm=true");
         push @args, "$imagesSrcDir/$name/";
@@ -253,6 +258,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
 
     sub dockerGetNameOfImg {
         my ($imgId) = @_;
+
         chomp(my $imgTags = (dockerRet(("inspect", "--format='{{.RepoTags}}'", $imgId)))[0]);
         if ( $imgTags eq "[]" ) {
             return $imgId;
@@ -261,6 +267,13 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
             $imgTags =~ s%:.*%%g;
             return $imgTags;
         }
+    }
+
+    sub dockerPush {
+        my ($target, $imageTag) = @_;
+
+        print "INFO: docker push $imageTag to $target\n";
+        docker(("image","push", "${target}:${imageTag}"));
     }
 }
 
@@ -293,6 +306,20 @@ sub buildAllBase {
     }
 }
 
+sub pushAllBase {
+    my ($registry) = @_;
+
+    foreach my $name (@imagesToBuild) {
+        dockerPush($registry,"sw360/${name}");
+        if(defined $ENV{'SW360CHORES_VERSION'}){
+            dockerPush($registry,"sw360/${name}:$ENV{'SW360CHORES_VERSION'}");
+            if(defined $ENV{'BUILD_NUMBER'}){
+                dockerPush($registry,"sw360/${name}:$ENV{'SW360CHORES_VERSION'}.$ENV{'BUILD_NUMBER'}");
+            }
+        }
+    }
+}
+
 sub buildPopulatedSW360 {
     sub copyWarsFromTo {
         my ($srcDir, $targetDir) = @_;
@@ -312,7 +339,7 @@ sub buildPopulatedSW360 {
         die "please set deploy src folder via --deploy=/PATH/TO/DEPLOY";
     }
 
-    my $sw360PopulatedDir = "$imagesSrcDir/sw360populated";
+    my $sw360PopulatedDir = "$imagesSrcDir/${sw360populatedName}";
 
     copyWarsFromTo($cpWebappsDir, "$sw360PopulatedDir/_webapps");
     copyWarsFromTo($cpDeployDir, "$sw360PopulatedDir/_deploy");
@@ -320,10 +347,34 @@ sub buildPopulatedSW360 {
     my @args = ();
 
     if(defined $ENV{'SW360_VERSION'}){
-        unshift @args, ("-t", "sw360/sw360populated:$ENV{'SW360_VERSION'}");
+        unshift @args, ("-t", "sw360/${sw360populatedName}:$ENV{'SW360_VERSION'}");
+        if(defined $ENV{'BUILD_NUMBER'}){
+            unshift @args, ("-t", "sw360/${sw360populatedName}:$ENV{'SW360_VERSION'}.$ENV{'BUILD_NUMBER'}");
+        }
     }
 
-    buildImage("sw360populated",@args);
+    buildImage("${sw360populatedName}",@args);
+}
+
+sub pushPopulatedSW360 {
+    my ($registry) = @_;
+
+    dockerPush($registry,"sw360/${sw360populatedName}");
+    if(defined $ENV{'SW360_VERSION'}){
+        dockerPush($registry,"sw360/${sw360populatedName}:$ENV{'SW360_VERSION'}");
+        if(defined $ENV{'BUILD_NUMBER'}){
+            dockerPush($registry,"sw360/${sw360populatedName}:$ENV{'SW360_VERSION'}.$ENV{'BUILD_NUMBER'}");
+        }
+    }
+}
+
+sub pushAll{
+    my ($registry) = @_;
+
+    pushAllBase($registry);
+    if ($prod) {
+        pushPopulatedSW360($registry);
+    }
 }
 
 sub saveAll {
@@ -483,6 +534,7 @@ if (! $prod) {
     buildPopulatedSW360() if $build;
 }
 
+pushAll($pushTo) if $pushTo;
 saveAll() if $save;
 
 if (defined $ARGV[0]) {
