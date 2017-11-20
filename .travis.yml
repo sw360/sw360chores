@@ -1,0 +1,35 @@
+# -----------------------------------------------------------------------------
+# Copyright Siemens AG, 2017.
+# Copyright Bosch Software Innovations GmbH, 2017.
+# Part of the SW360 Portal Project.
+#
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved. This file is offered as-is,
+# without any warranty.
+# -----------------------------------------------------------------------------
+dist: trusty
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - curl -L https://github.com/docker/compose/releases/download/1.14.0/docker-compose-`uname -s`-`uname -m` | sudo tee /usr/local/bin/docker-compose > /dev/null
+  - sudo chmod +x /usr/local/bin/docker-compose
+  
+install:
+  - set -e
+  - ./sw360chores.pl --build -- up -d
+  - sleep 140
+
+before_script:
+  - netstat -tulpn
+  - docker images
+  - docker network ls
+  - docker ps
+
+script: .travis/testDockerComposeDeployment.sh
+
+after_failure:
+ - ./sw360chores.pl -- logs --tail=500

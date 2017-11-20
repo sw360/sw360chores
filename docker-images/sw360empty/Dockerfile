@@ -17,7 +17,7 @@ ENV PATH $CATALINA_HOME/bin:$PATH
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib
 ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 
-ADD liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip /opt/
+COPY liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip /opt/
 RUN set -x \
   && apk add --update unzip \
 	&& unzip /opt/liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip -d /opt \
