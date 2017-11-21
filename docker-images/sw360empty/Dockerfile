@@ -20,7 +20,7 @@ ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR
 COPY liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip /opt/
 RUN set -x \
  && apk add --update unzip \
- && unzip /opt/liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip -d /opt \
+ && unzip -q /opt/liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip -d /opt \
  && mv /opt/liferay-portal-6.2-ce-ga5/tomcat-7.0.62 $CATALINA_HOME \
  && rm -rf /opt/liferay-portal-6.2-ce-ga5/ \
            /opt/liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip \

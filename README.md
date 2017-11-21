@@ -77,6 +77,21 @@ The `./sw360chores.pl` command has the optional parameters `--backup` and
 files, which are placed in the folder defined as `BACKUP_FOLDER` in
 `./configuration.env`.
 
+## Vagrant for testing / demonstration
+
+One can build the docker setup within a Virtualbox controlled by Vagrant via
+```
+$ vagrant up && vagrant reload
+```
+It will then consume the content from `./_deploy`.
+
+The log from docker than can be watched via
+```
+$ vagrant ssh -c "/sw360chores/sw360chores.pl -- logs -f"
+```
+
+More description can be found in the file `./Vagrantfile`.
+
 # About the folder structure
 Each subfolder contains its own readme describing explicitly how to use the
 corresponding content.
