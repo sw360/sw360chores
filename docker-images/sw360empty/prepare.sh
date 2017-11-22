@@ -10,10 +10,11 @@
 
 set -e
 cd "$(dirname "${BASH_SOURCE[0]}" )"
-TARGET="liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip"
+TARGET="sw360-liferay.tar.gz"
 
 if [ ! -f "$TARGET" ]; then
-    curl -OskLC - 'https://downloads.sourceforge.net/project/lportal/Liferay%20Portal/6.2.4%20GA5/liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip'
+    ../../miscellaneous/prepare-liferay/prepare.sh
+    cp ../../miscellaneous/prepare-liferay/$TARGET ./
 else
     echo "... the file $TARGET already exists: skip"
 fi
