@@ -23,6 +23,7 @@ services:
       - 5005:5005
     environment:
       - TOMCAT_DEBUG_PORT=5005
+      - SERVE_LOGS=1
     volumes:
       - ../_deploy:/opt/sw360/deploy
 

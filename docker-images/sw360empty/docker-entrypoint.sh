@@ -35,6 +35,9 @@
 #
 # for debugging
 #    $TOMCAT_DEBUG_PORT (optional)
+#
+# to serve the tomcat logs under /logs
+#    $SERVE_LOGS
 
 set -e
 
@@ -45,6 +48,16 @@ if [ "$JAVA_OPTS_EXT" ]; then
 JAVA_OPTS="\$JAVA_OPTS $JAVA_OPTS_EXT"
 export JAVA_OPTS
 EOF
+fi
+
+################################################################################
+# Setup serving of logs
+if [ "$SERVE_LOGS" ]; then
+    cat <<EOF > /opt/sw360/conf/Catalina/localhost/logs.xml
+<Context override="true" docBase="/opt/sw360/logs/" path="/logs" />
+EOF
+else
+    rm -f /opt/sw360/conf/Catalina/localhost/logs.xml
 fi
 
 ################################################################################
