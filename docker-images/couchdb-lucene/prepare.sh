@@ -36,13 +36,12 @@ if [ ! -f "$DIR/$TARGET" ]; then
     $cmdDocker run -i \
                --cap-drop=all --user "${UID}" \
                -v "$TMP/couchdb-lucene.git:/couchdb-lucene" \
-               --env http_proxy \
-               --env https_proxy \
-               --env no_proxy \
+               --env proxy_host \
+               --env proxy_port \
                --env MAVEN_CONFIG=/tmp/ \
                -w /couchdb-lucene \
                maven:3-jdk-8-alpine \
-               mvn
+               mvn -Dhttp.proxyHost=\$proxy_host -Dhttp.proxyPort=\$proxy_port -Dhttp.nonProxyHosts=localhost
     cp "$TMP/couchdb-lucene.git/target/$TARGET" "$DIR"
     rm -rf "$TMP"
 else

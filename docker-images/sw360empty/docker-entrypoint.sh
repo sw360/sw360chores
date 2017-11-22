@@ -123,7 +123,7 @@ if [ "$HTTPS_HOSTS" ]; then
                 -alias "$HOST" \
                 -storepass changeit \
                 -noprompt \
-                -import -file public.crt || continue
+                -import -file public.crt || echo "INFO: certificate for host $HOST was not imported"
     done
 fi
 
@@ -148,7 +148,7 @@ if [ "$TRUSTED_CACERTS" ]; then
                   -alias "$CERT_NAME" \
                   -storepass changeit \
                   -noprompt \
-                  -import -file $OUT
+                  -import -file $OUT || echo "INFO: certificate $CERT_NAME was not imported"
         fi
     done
 fi
