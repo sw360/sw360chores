@@ -42,9 +42,10 @@ testUrlWithSearchString () {
 assertTomcat () {
     echo "assert that tomcat running (by examining the log)"
     set -x
-    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Loading file:/opt/sw360/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
-    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Determine dialect for PostgreSQL 9"
-    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "org.apache.catalina.startup.Catalina.start Server startup in"
+    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Loading file:/opt/portal-bundle.properties"
+    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Determine dialect for PostgreSQL"
+    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "org.apache.catalina.startup.Catalina start"
+    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -i "INFO: Server startup in"
     set +x
 }
 
@@ -61,7 +62,7 @@ assertLiferayViaHTTP () {
 assertCouchdb () {
     echo "assert that CouchDB running (by examining the log)"
     set -x
-    $DIR/sw360chores.pl -- logs sw283couchdb 2>/dev/null | grep -iq "Apache CouchDB has started"
+    $DIR/sw360chores.pl -- logs sw360couchdb 2>/dev/null | grep -iq "Apache CouchDB has started"
     set +x
 }
 

@@ -10,6 +10,7 @@ FROM couchdb:1.7.1
 MAINTAINER admin@sw360.org
 
 COPY docker-entrypoint.overlay.sh /docker-entrypoint.overlay.sh
-run chmod +x /docker-entrypoint.overlay.sh
+run chmod +x /docker-entrypoint.overlay.sh \
+ && mkdir -p /usr/local/etc/couchdb/
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.overlay.sh"]
 CMD ["couchdb"]

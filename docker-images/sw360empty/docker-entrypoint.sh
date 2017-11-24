@@ -41,9 +41,9 @@ set -e
 ################################################################################
 # Setup JAVA_OPTS
 if [ "$JAVA_OPTS_EXT" ]; then
-    cat <<EOF > /opt/sw360/bin/setenv.sh
-#!/usr/bin/env bash
+    cat <<EOF >> /opt/sw360/bin/setenv.sh
 JAVA_OPTS="\$JAVA_OPTS $JAVA_OPTS_EXT"
+export JAVA_OPTS
 EOF
 fi
 
@@ -85,7 +85,7 @@ if [ ! "$COUCHDB_HOST" ]; then
     echo "couchdb configuration incomplete"
     exit 1
 fi
-echo "couchdb.url = http://${COUCHDB_HOST:-localhost}:5984" > /etc/sw360/couchdb.properties
+echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/couchdb.properties
 if [ "$COUCHDB_USER" ]; then
     echo "couchdb.user = $COUCHDB_USER" >> /etc/sw360/couchdb.properties
 fi

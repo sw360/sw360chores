@@ -15,3 +15,4 @@ JAVA_OPTS="$JAVA_OPTS -XX:+UseConcMarkSweepGC"
 JAVA_OPTS="$JAVA_OPTS -XX:+CMSParallelRemarkEnabled"
 JAVA_OPTS="$JAVA_OPTS -XX:SurvivorRatio=20"
 
+export JAVA_OPTS
