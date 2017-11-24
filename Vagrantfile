@@ -35,7 +35,8 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "shell", inline: <<-SHELL
 set -xe
-apt install -y curl git
+apt-get update
+apt-get install -y curl git unzip
 type docker &> /dev/null || \
     curl -sSL https://get.docker.com/ | sh
 usermod -a -G docker vagrant
