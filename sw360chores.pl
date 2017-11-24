@@ -227,6 +227,9 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
             }
         }
         unshift @args, ("build", "-t", "sw360/$name", "--rm=true", "--force-rm=true");
+        unshift(@args, ("--build-arg", "http_proxy=$ENV{'http_proxy'}")) if (defined $ENV{"http_proxy"});
+        unshift(@args, ("--build-arg", "https_proxy=$ENV{'https_proxy'}")) if (defined $ENV{"https_proxy"});
+        unshift(@args, ("--build-arg", "no_proxy=$ENV{'no_proxy'}")) if (defined $ENV{"no_proxy"});
         push @args, "$imagesSrcDir/$name/";
 
         print "INFO: docker build $name\n";
