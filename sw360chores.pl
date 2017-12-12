@@ -76,6 +76,7 @@ my $restoreDir = '';
 GetOptions (
     # handle imgaes
     'build' => \$build,
+    'build-only=s' => \$build,
     'save|save-images' => \$save,
     'load|load-images' => sub {die "not implemented yet"},
     'push-to=s' => \$pushTo,
@@ -314,7 +315,9 @@ sub buildImage {
 
 sub buildAllBase {
     foreach my $name (@imagesToBuild) {
-        buildImage $name;
+        if ($build =~ /^\d+$/ || $build eq $name) {
+            buildImage $name;
+        }
     }
 }
 
@@ -333,6 +336,10 @@ sub pushAllBase {
 }
 
 sub buildPopulatedSW360 {
+    if (! ($build =~ /^\d+$/ || $build eq $sw360populatedName)) {
+        return;
+    }
+
     sub copyWarsFromTo {
         my ($srcDir, $targetDir) = @_;
 
