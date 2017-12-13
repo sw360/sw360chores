@@ -19,6 +19,8 @@ use File::Path qw(remove_tree);
 use Getopt::Long qw(GetOptions);
 use Pod::Usage;
 
+use feature qw(say);
+
 =head1 SYNOPSIS
 
     ./sw360chores.pl [switches] [options] [-- arguments for docker-compose]
@@ -73,6 +75,7 @@ my $cpWebappsDir = '';
 my $cpDeployDir = '';
 my $backupDir = '';
 my $restoreDir = '';
+my $debug = '';
 GetOptions (
     # handle imgaes
     'build' => \$build,
@@ -102,7 +105,8 @@ GetOptions (
         my ($opt_name, $opt_value) = @_;
         $restoreDir = realpath($opt_value);
     },
-    'help' => sub {pod2usage();}
+    'help' => sub {pod2usage();},
+    'debug' => \$debug
     ) or pod2usage();
 
 ################################################################################
@@ -147,7 +151,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
     }
 
     if (system("docker info &> /dev/null") != 0) {
-        print "INFO: add sudo to docker commands";
+        say "INFO: add sudo to docker commands";
         unshift @dockerCmd, "sudo";
         unshift @dockerComposeCmd, "sudo";
     }
@@ -159,6 +163,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         push(@toCall, @dockerCmd);
         push(@toCall, @args);
 
+        say "DEBUG: call: @toCall" if $debug;
         if (! $nonInteractive) {
             0 == system(@toCall)
                 or die "failed...";
@@ -198,6 +203,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         }
         push(@toCall, @args);
 
+        say "DEBUG: call: @toCall" if $debug;
         if (! $nonInteractive) {
             0 == system(@toCall)
                 or die "failed...";
@@ -227,13 +233,14 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
                 unshift @args, ("-t", "sw360/${name}:$ENV{'SW360CHORES_VERSION'}.$ENV{'BUILD_NUMBER'}");
             }
         }
-        unshift @args, ("build", "-t", "sw360/$name", "--rm=true", "--force-rm=true");
         unshift(@args, ("--build-arg", "http_proxy=$ENV{'http_proxy'}")) if (defined $ENV{"http_proxy"});
         unshift(@args, ("--build-arg", "https_proxy=$ENV{'https_proxy'}")) if (defined $ENV{"https_proxy"});
         unshift(@args, ("--build-arg", "no_proxy=$ENV{'no_proxy'}")) if (defined $ENV{"no_proxy"});
+
+        unshift(@args, ("build", "-t", "sw360/$name", "--rm=true", "--force-rm=true"));
         push @args, "$imagesSrcDir/$name/";
 
-        print "INFO: docker build $name\n";
+        say "INFO: docker build $name\n";
         docker(@args);
     }
 
@@ -241,14 +248,14 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         my ($name, @args) = @_;
         unshift @args, ("run", "-it", "sw360/$name");
 
-        print "INFO: docker run $name\n";
+        say "INFO: docker run $name";
         docker(@args);
     }
 
     sub dockerSave {
         my ($image) = @_;
 
-        print "INFO: docker save $image\n";
+        say "INFO: docker save $image";
         eval {
             docker(("save", "-o", "$saveDir/$image.tar", "$image"))
         }; warn $@ if $@;
@@ -257,7 +264,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
     sub dockerRmi {
         my ($image) = @_;
 
-        print "INFO: docker rmi $image\n";
+        say "INFO: docker rmi $image";
         eval {
             docker(("rmi", "$image"))
         }; warn $@ if $@;
@@ -265,7 +272,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
 
     sub dockerCp {
         my ($src_path, $dest_path) = @_;
-        print "INFO: docker cp $src_path to $dest_path\n";
+        say "INFO: docker cp $src_path to $dest_path";
         docker(("cp", $src_path, $dest_path));
     }
 
@@ -285,7 +292,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
     sub dockerPush {
         my ($target, $imageTag) = @_;
 
-        print "INFO: docker push $imageTag to $target\n";
+        say "INFO: docker push $imageTag to $target";
         docker(("image","push", "${target}:${imageTag}"));
     }
 }
@@ -467,7 +474,7 @@ sub backupVolumes {
         my ($containerId, $containerName, $volume) = @_;
         my $backupFileName = getBackupFileName($containerName, $volume);
 
-        print "    backup volume $volume to $backupFileName\n";
+        say "    backup volume $volume to $backupFileName";
         docker(("run", "--rm",
                 "--volumes-from", $containerId,
                 "-v", "$backupDir:/backup",
@@ -481,7 +488,7 @@ sub backupVolumes {
         my @volumes = getListOfVolumes($containerId);
 
         if (@volumes){
-            print "backup container with id=$containerId and name=$containerName\n";
+            say "backup container with id=$containerId and name=$containerName";
 
             foreach my $volume (@volumes) {
                 backupVolumeOf($containerId, $containerName, $volume);
@@ -504,10 +511,10 @@ sub restoreVolumes {
 
         if (-f "$restoreDir/$backupFileName"){
             local $| = 1; # activate autoflush to immediately show the prompt
-            print "restore $backupFileName to $containerName? (y/N)\n";
+            say "restore $backupFileName to $containerName? (y/N)";
             chomp(my $answer = <STDIN>);
             if (lc($answer) eq 'y') {
-                print "restoring...\n";
+                say "restoring...";
                 docker(("run", "--rm",
                         "--volumes-from", $containerId,
                         "-v", "$restoreDir:/backup",
