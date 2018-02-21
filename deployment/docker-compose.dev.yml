@@ -12,21 +12,29 @@
 
 version: '2'
 services:
+
   sw360nginx:
     logging:
       driver: "none"
+
   sw360:
     ports:
       - 8080:8080
       - 5005:5005
     environment:
       - TOMCAT_DEBUG_PORT=5005
+      - SERVE_LOGS=1
+    volumes:
+      - ../_deploy:/opt/sw360/deploy
+
   sw360postgres:
     ports:
       - 15432:5432
+
   sw360couchdb:
     ports:
       - 5984:5984
+
   sw360couchdb-lucene:
     ports:
       - 5985:5985

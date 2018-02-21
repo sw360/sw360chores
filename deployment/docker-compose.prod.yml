@@ -1,0 +1,34 @@
+# Copyright Bosch Software Innovations GmbH, 2016.
+# Part of the SW360 Portal Project.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+
+# This is the main docker-compose file for the sw360 environment. It configures
+# the sw360 service and a couchdb and postgres that are required by sw360.
+# Use it as described in README.md
+
+version: '2'
+services:
+
+  sw360:
+    image: sw360/sw360populated
+
+  sw360nginxCouchdb:
+    container_name: sw360nginxCouchdb
+    image: sw360/sw360nginx
+    restart: unless-stopped
+    ports:
+      - 9443:8443
+    networks:
+      - sw360DBs
+    depends_on:
+      - sw360couchdb
+    environment:
+      - HOST=sw360couchdb
+      - HOST_PORT=5984
+    extends:
+      file: ../configuration.yml
+      service: sw360nginx

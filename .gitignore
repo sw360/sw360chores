@@ -7,3 +7,4 @@ _*
 *.zip
 *.rpm
 .idea
+*.war

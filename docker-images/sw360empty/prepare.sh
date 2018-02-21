@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright Bosch Software Innovations GmbH, 2016.
 # Part of the SW360 Portal Project.
 #
@@ -6,17 +8,13 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-# This file adds a cve-search server to the sw360 environment.
-# Use it together with the main docker-compose.yml as described
-# in README.md
+set -e
+cd "$(dirname "${BASH_SOURCE[0]}" )"
+TARGET="sw360-liferay.tar.gz"
 
-version: '2'
-services:
-  sw360redis:
-    ports:
-      - 6379:6379
-
-  sw360mongodb:
-    ports:
-      - 27017:27017
-      - 28017:28017
+if [ ! -f "$TARGET" ]; then
+    ../../miscellaneous/prepare-liferay/prepare.sh
+    cp ../../miscellaneous/prepare-liferay/$TARGET ./
+else
+    echo "... the file $TARGET already exists: skip"
+fi

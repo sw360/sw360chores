@@ -6,17 +6,11 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-# This file adds a cve-search server to the sw360 environment.
-# Use it together with the main docker-compose.yml as described
-# in README.md
+FROM couchdb:1.7.1
+MAINTAINER admin@sw360.org
 
-version: '2'
-services:
-  sw360redis:
-    ports:
-      - 6379:6379
-
-  sw360mongodb:
-    ports:
-      - 27017:27017
-      - 28017:28017
+COPY docker-entrypoint.overlay.sh /docker-entrypoint.overlay.sh
+run chmod +x /docker-entrypoint.overlay.sh \
+ && mkdir -p /usr/local/etc/couchdb/
+ENTRYPOINT ["tini", "--", "/docker-entrypoint.overlay.sh"]
+CMD ["couchdb"]

@@ -14,8 +14,8 @@ version: '2'
 services:
 
   sw360nginx:
-    build: ./sw360nginx/
-    image: sw360nginx
+    container_name: sw360nginx
+    image: sw360/sw360nginx
     restart: unless-stopped
     ports:
       - 8443:8443
@@ -28,17 +28,12 @@ services:
       - HOST_PORT=8080
       - RESTRICTED_URLS=manager|attachments|bdpimport|components|cvesearch|fossology|layouttpl|licenseinfo|licenses|moderation|projects|schedule|search|users|vendors|vulnerabilities
     extends:
-      file: configuration.yml
+      file: ../configuration.yml
       service: sw360nginx
 
   sw360:
-    build:
-      context: ./sw360/
-      args:
-        - http_proxy
-        - https_proxy
-        - no_proxy
-    image: sw360
+    container_name: sw360
+    image: sw360/sw360empty
     restart: unless-stopped
     networks:
       - sw360front
@@ -47,54 +42,46 @@ services:
       - sw360postgres
       - sw360couchdb
     environment:
-      - PROTOCOL=https
       - POSTGRES_USER=sw360
       - POSTGRES_HOST=sw360postgres
       - COUCHDB_HOST=sw360couchdb
       - COUCHDB_USER=sw360
-    env_file: proxy.env
+    env_file: ../configuration.env
     extends:
-      file: configuration.yml
+      file: ../configuration.yml
       service: sw360
 
   sw360postgres:
-    image: postgres
+    container_name: sw360postgres
+    image: postgres:9
     restart: unless-stopped
-    extends:
-      file: configuration.yml
-      service: sw360postgres
     networks:
       - sw360DBs
+    env_file: ../configuration.env
     environment:
       - POSTGRES_DB=sw360pgdb
       - POSTGRES_USER=sw360
 
   sw360couchdb:
-    build: ./sw360couchdb/
-    image: sw360couchdb
+    container_name: sw360couchdb
+    image: sw360/sw360couchdb
     restart: unless-stopped
-    extends:
-      file: configuration.yml
-      service: sw360couchdb
     networks:
       - sw360DBs
+    env_file: ../configuration.env
     environment:
       - COUCHDB_USER=sw360
       - COUCHDB_LUCENE_HOST=sw360couchdb-lucene
 
   sw360couchdb-lucene:
-    build:
-      context: ./couchdb-lucene/
-      args:
-        - http_proxy
-        - https_proxy
-        - no_proxy
-    image: sw360couchdb-lucene
+    container_name: sw360couchdb-lucene
+    image: sw360/couchdb-lucene
     restart: unless-stopped
     networks:
       - sw360DBs
     depends_on:
       - sw360couchdb
+    env_file: ../configuration.env
     environment:
       - COUCHDB_HOST=sw360couchdb
       - COUCHDB_USER=sw360
