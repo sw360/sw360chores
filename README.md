@@ -1,3 +1,9 @@
+# SW360 chores
+
+This repository contains code which sets up a Docker based deployment and development infrastructure for [SW360](https://github.com/eclipse/sw360).
+It simplifies and abstracts the configuration.
+It also contains tools for backing up and restoring of container states as well as for exporting and importing docker images.
+
 ## Prerequisites
 You need
 - the perl interpreter to run `./sw360chores.pl`
@@ -26,6 +32,12 @@ To build all images and start them simply use
 ```
 ./sw360chores.pl --build -- up
 ```
+To get a fully configured [SW360](https://github.com/eclipse/sw360) running, you need to compile the wars and place them into `./_deploy`.
+This can be done from within the SW360 project root with a single command via
+```
+$ mvn install -P deploy -Ddeploy.dir=/ABSOLUTE/PATH/TO/sw360chores/_deploy -DskipTests
+```
+After that you should follow the [next steps in the SW360 wiki](https://github.com/eclipse/sw360/wiki#portal-deployment-next-steps).
 
 ## Configuration
 
