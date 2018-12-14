@@ -12,5 +12,14 @@ if [ "$COUCHDB_LUCENE_HOST" ]; then
     sed -i -r 's/\[httpd_global_handlers\]/[httpd_global_handlers]\n_fti = {couch_httpd_proxy, handle_proxy_req, <<"http:\/\/'"$COUCHDB_LUCENE_HOST"':5985">>}/' /usr/local/etc/couchdb/local.ini
 fi
 
+if [ "$(ls -A /usr/local/var/lib/couchdb)" ]; then
+    echo "Data directory not empty, will not provision."
+else
+    if [ "$(ls -A /initial-data)" ]; then
+        cp -R /initial-data/* /usr/local/var/lib/couchdb
+        echo "Provisioned container with data from /initial-data"
+    fi
+fi
+
 exec /docker-entrypoint.sh "$@"
 
