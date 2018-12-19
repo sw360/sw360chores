@@ -10,15 +10,15 @@
 # the sw360 service and a couchdb and postgres that are required by sw360.
 # Use it as described in README.md
 
-version: '2'
+version: '3.7'
 services:
 
   sw360:
     image: sw360/sw360populated
 
   sw360nginxCouchdb:
-    container_name: sw360nginxCouchdb
     image: sw360/sw360nginx
+    container_name: ${COMPOSE_PROJECT_NAME}_sw360nginxCouchdb
     restart: unless-stopped
     ports:
       - 9443:8443
@@ -29,6 +29,7 @@ services:
     environment:
       - HOST=sw360couchdb
       - HOST_PORT=5984
-    extends:
-      file: ../configuration.yml
-      service: sw360nginx
+    secrets:
+      - nginx_key
+      - nginx_pem
+      - nginx_fifo

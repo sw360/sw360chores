@@ -10,7 +10,7 @@
 FROM tomcat:8-jre8-alpine
 MAINTAINER admin@sw360.org
 
-RUN apk add --update bash openssl fontconfig ttf-dejavu
+RUN apk add --update bash openssl fontconfig ttf-dejavu gettext
 
 ENV CATALINA_HOME /opt/sw360
 ENV TOMCAT_NATIVE_LIBDIR $CATALINA_HOME/native-jni-lib

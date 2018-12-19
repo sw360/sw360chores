@@ -1,4 +1,4 @@
-# Copyright Bosch Software Innovations GmbH, 2016.
+# Copyright Bosch Software Innovations GmbH, 2016-2019.
 # Part of the SW360 Portal Project.
 #
 # All rights reserved. This program and the accompanying materials
@@ -10,15 +10,38 @@
 # the sw360 service and a couchdb and postgres that are required by sw360.
 # Use it as described in README.md
 
-version: '2'
-services:
+version: '3.7'
 
+secrets:
+  POSTGRES_PASSWORD:
+    file: ../configuration/POSTGRES_PASSWORD
+  COUCHDB_PASSWORD:
+    file: ../configuration/COUCHDB_PASSWORD
+  nginx_key:
+    file: ../configuration/nginx/nginx.key
+  nginx_pem:
+    file: ../configuration/nginx/nginx.pem
+  nginx_fifo:
+    file: ../configuration/nginx/nginx.fifo
+  fossology.id_rsa:
+    file: ../configuration/sw360/fossology/fossology.id_rsa
+  fossology.id_rsa.pub:
+    file: ../configuration/sw360/fossology/fossology.id_rsa.pub
+  certificates:
+    file: ../configuration/certificates
+
+volumes:
+  SW360TomcatVolume:
+  SW360CouchDBVolume:
+  SW360PostgresVolume:
+
+services:
   sw360nginx:
-    container_name: sw360nginx
     image: sw360/sw360nginx
+    container_name: ${COMPOSE_PROJECT_NAME}_sw360nginx
     restart: unless-stopped
     ports:
-      - 8443:8443
+      - ${SW360_NGINX_PORT:-8443}:8443
     networks:
       - sw360front
     depends_on:
@@ -27,13 +50,14 @@ services:
       - HOST=sw360
       - HOST_PORT=8080
       - RESTRICTED_URLS=manager|attachments|bdpimport|components|cvesearch|fossology|layouttpl|licenseinfo|licenses|moderation|projects|schedule|search|users|vendors|vulnerabilities
-    extends:
-      file: ../configuration.yml
-      service: sw360nginx
+    secrets:
+      - nginx_key
+      - nginx_pem
+      - nginx_fifo
 
   sw360:
-    container_name: sw360
     image: sw360/sw360empty
+    container_name: ${COMPOSE_PROJECT_NAME}_sw360
     restart: unless-stopped
     networks:
       - sw360front
@@ -42,61 +66,68 @@ services:
       - sw360postgres
       - sw360couchdb
     environment:
+      - PORT=${SW360_NGINX_PORT:-8443}
       - POSTGRES_USER=sw360
       - POSTGRES_HOST=sw360postgres
       - COUCHDB_HOST=sw360couchdb
       - COUCHDB_USER=sw360
-    env_file: ../configuration.env
-    extends:
-      file: ../configuration.yml
-      service: sw360
+      - POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
+      - COUCHDB_PASSWORD_FILE=/run/secrets/COUCHDB_PASSWORD
+    env_file:
+      - ../configuration/sw360/sw360.env
+    secrets:
+      - fossology.id_rsa
+      - fossology.id_rsa.pub
+      - POSTGRES_PASSWORD
+      - COUCHDB_PASSWORD
+      - certificates
+    volumes:
+      - "SW360TomcatVolume:/opt/sw360"
 
   sw360postgres:
-    container_name: sw360postgres
     image: postgres:9
+    container_name: ${COMPOSE_PROJECT_NAME}_sw360postgres
     restart: unless-stopped
     networks:
       - sw360DBs
-    env_file: ../configuration.env
     environment:
       - POSTGRES_DB=sw360pgdb
       - POSTGRES_USER=sw360
+      - POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
+    secrets:
+      - POSTGRES_PASSWORD
+    volumes:
+      - "SW360PostgresVolume:/var/lib/postgresql/data"
 
   sw360couchdb:
-    container_name: sw360couchdb
     image: sw360/sw360couchdb
+    container_name: ${COMPOSE_PROJECT_NAME}_sw360couchdb
     restart: unless-stopped
     networks:
       - sw360DBs
-    env_file: ../configuration.env
     environment:
       - COUCHDB_USER=sw360
       - COUCHDB_LUCENE_HOST=sw360couchdb-lucene
+    secrets:
+      - COUCHDB_PASSWORD
+    volumes:
+      - "SW360CouchDBVolume:/usr/local/var/lib/couchdb"
 
   sw360couchdb-lucene:
-    container_name: sw360couchdb-lucene
     image: sw360/couchdb-lucene
+    container_name: ${COMPOSE_PROJECT_NAME}_sw360couchdb-lucene
     restart: unless-stopped
     networks:
       - sw360DBs
     depends_on:
       - sw360couchdb
-    env_file: ../configuration.env
     environment:
       - COUCHDB_HOST=sw360couchdb
       - COUCHDB_USER=sw360
+    secrets:
+      - COUCHDB_PASSWORD
 
 networks:
   sw360front:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.29.5.0/24
-          gateway: 172.29.5.254
   sw360DBs:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.29.6.0/24
-          gateway: 172.29.6.254
 

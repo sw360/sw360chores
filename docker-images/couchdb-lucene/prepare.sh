@@ -13,6 +13,13 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BRANCH="v2.1.0"
 TARGET="couchdb-lucene-2.1.0-dist.zip"
 
+if [[ $1 == "--cleanup" ]]; then
+    if [ -f "$TARGET" ]; then
+        rm "$TARGET"
+    fi
+    exit 0
+fi
+
 if [ ! -f "$DIR/$TARGET" ]; then
     if [[ -f $DIR/../../proxy.env ]]; then
         source $DIR/../../proxy.env

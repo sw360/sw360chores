@@ -15,8 +15,9 @@ if [ ! "$COUCHDB_HOST" ]; then
     exit 1
 fi
 
-if [ "$COUCHDB_USER" ] && [ "$COUCHDB_PASSWORD" ]; then
-    COUCHDB_HOST="${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_HOST}"
+COUCHDB_PASSWORD_FILE=/run/secrets/COUCHDB_PASSWORD
+if [ "$COUCHDB_USER" ] && [ -f "$COUCHDB_PASSWORD_FILE" ]; then
+    COUCHDB_HOST="${COUCHDB_USER}:$(cat "$COUCHDB_PASSWORD_FILE")@${COUCHDB_HOST}"
 fi
 
 sed -i -r 's/^url.*=.*/url = http:\/\/'"$COUCHDB_HOST:${COUCHDB_PORT:-5984}"'/' "/couchdb-lucene/conf/couchdb-lucene.ini"

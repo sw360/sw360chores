@@ -13,24 +13,16 @@
 #    HOST_PORT (e.g. 8080)
 #    TARGET_PORT (e.g. 8443)
 #    CLIENT_MAX_BODY_SIZE (defaults to "1000m")
-#    NGINX_CERTIFICATE
-#    KEY_KEY_PRIV_PASSPHRASE
-#    NGINX_KEY_PRIV
+# used secrets
+#    nginx_pem
+#    nginx_key
+#    nginx_fifo
+
 
 set -e
 
 client_max_body_size=${CLIENT_MAX_BODY_SIZE:-1000m}
 
-################################################################################
-# Setup for custom user-specified certificates
-if [ "$NGINX_CERTIFICATE" ] && [ "$NGINX_KEY_PRIV" ]; then
-    echo -e "$NGINX_CERTIFICATE" > /etc/nginx/certs/nginx.pem
-    echo -e "$NGINX_KEY_PRIV" > /etc/nginx/certs/nginx.key
-
-    if [ "$NGINX_KEY_PRIV_PASSPHRASE" ]; then
-        echo "$NGINX_KEY_PRIV_PASSPHRASE" > /etc/nginx/certs/fifo
-    fi
-fi
 
 ################################################################################
 ## generate /etc/nginx/conf.d/nginx-sw360.conf
@@ -47,9 +39,9 @@ server {
     #
     # Read up on ssl_ciphers to ensure a secure configuration.
     # See: https://bugs.debian.org/765782
-    ssl_certificate /etc/nginx/certs/nginx.pem;
-    ssl_certificate_key /etc/nginx/certs/nginx.key;
-    ssl_password_file /etc/nginx/certs/fifo;
+    ssl_certificate /run/secrets/nginx_pem;
+    ssl_certificate_key /run/secrets/nginx_key;
+    ssl_password_file /run/secrets/nginx_fifo;
 
     root /var/www/html;
 

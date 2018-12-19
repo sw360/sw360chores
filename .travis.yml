@@ -10,26 +10,46 @@
 # -----------------------------------------------------------------------------
 dist: trusty
 sudo: required
-
+addons:
+  apt:
+    packages:
+      - docker-ce
 services:
   - docker
 
+env:
+  - DOCKER_COMPOSE_VERSION=1.23.2
 before_install:
-  - curl -L https://github.com/docker/compose/releases/download/1.14.0/docker-compose-`uname -s`-`uname -m` | sudo tee /usr/local/bin/docker-compose > /dev/null
-  - sudo chmod +x /usr/local/bin/docker-compose
-  
-install:
   - set -e
-  - ./sw360chores.pl --build -- up -d
-  - sleep 140
+  - sudo rm /usr/local/bin/docker-compose
+  - sudo curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+  - sudo chmod +x /usr/local/bin/docker-compose
 
-before_script:
-  - netstat -tulpn
-  - docker images
-  - docker network ls
-  - docker ps
+jobs:
+  include:
+    - name: docker compose test
+      install:
+        - set -e
+        - ./sw360chores.pl --build -- up -d
+        - sleep 140
+      script: .travis/testDockerComposeDeployment.sh
+      after_failure:
+       - ./sw360chores.pl -- logs --tail=500
+    - name: docker swarm test
+      install:
+        - set -e
+        - docker swarm init
+        - docker version
+        - docker info
+        - ./sw360chores.pl --swarm --build
+        - docker tag sw360/sw360empty sw360/sw360populated # emulate the build prod docker images
+        - docker stack deploy --compose-file <(./sw360chores.pl --prod --swarm -- config) sw360
+        - sleep 140
+        - docker service ls
+        - docker stack ps sw360
+      script: .travis/testDockerSwarmDeployment.sh
+      after_script:
+        - set -ex
+        - docker service ls
+        - docker stack ps sw360
 
-script: .travis/testDockerComposeDeployment.sh
-
-after_failure:
- - ./sw360chores.pl -- logs --tail=500
