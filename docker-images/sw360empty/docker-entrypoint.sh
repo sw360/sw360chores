@@ -17,12 +17,12 @@
 # for postgres configuration
 #    $POSTGRES_HOST
 #    $POSTGRES_USER
-#    $POSTGRES_PASSWORD
+#    $POSTGRES_PASSWORD_FILE
 #
 # for couchdb configuration
 #    $COUCHDB_HOST
 #    $COUCHDB_USER (optional)
-#    $COUCHDB_PASSWORD (optional)
+#    $COUCHDB_PASSWORD_FILE (optional)
 #
 # for trusting SSL certificates
 #    $HTTPS_HOSTS (optional)
@@ -38,6 +38,10 @@
 #
 # to serve the tomcat logs under /logs
 #    $SERVE_LOGS
+#
+# secrets
+#    fossology.id_rsa
+#    fossology.id_rsa.pub
 
 set -e
 
@@ -61,19 +65,27 @@ else
 fi
 
 ################################################################################
-# Setup liferay
+# setup config files
 mkdir -p /etc/sw360/
+if [[ -f /sw360.properties ]]; then
+    cp /sw360.properties /etc/sw360/sw360.properties
+fi
+if [[ -f /ldapimporter.properties ]]; then
+    cp /ldapimporter.properties /etc/sw360/ldapimporter.properties
+fi
+
+################################################################################
+# Setup liferay ()
 EXT_PROPERTIES_FILE=/etc/sw360/portal-ext.properties
-echo > $EXT_PROPERTIES_FILE
-if [[ $PORTAL_EXT_PROPERTIES ]]; then
-    echo -e "$PORTAL_EXT_PROPERTIES" >> $EXT_PROPERTIES_FILE
+if [[ -f /portal-ext.properties ]]; then
+    cp /portal-ext.properties $EXT_PROPERTIES_FILE
 fi
 if [[ $PORT ]]; then
     echo "web.server.https.port=$PORT" >> $EXT_PROPERTIES_FILE
 fi
 
 # Setup postgres for liferay
-if [ ! "$POSTGRES_HOST" ] || [ ! "$POSTGRES_USER" ] || [ ! "$POSTGRES_PASSWORD" ]; then
+if [ ! "$POSTGRES_HOST" ] || [ ! "$POSTGRES_USER" ] || [ ! -f "$POSTGRES_PASSWORD_FILE" ]; then
     echo "postgres configuration incomplete"
     exit 1
 fi
@@ -81,16 +93,10 @@ cat <<EOF >> $EXT_PROPERTIES_FILE
 jdbc.default.driverClassName=org.postgresql.Driver
 jdbc.default.url=jdbc:postgresql://${POSTGRES_HOST:-localhost}:5432/sw360pgdb
 jdbc.default.username=$POSTGRES_USER
-jdbc.default.password=$POSTGRES_PASSWORD
+jdbc.default.password=$(cat $POSTGRES_PASSWORD_FILE)
 EOF
 export DB_TYPE=POSTGRESQL
 
-################################################################################
-# Setup sw360
-mkdir -p /etc/sw360
-if [ "$SW360_PROPERTIES" ]; then
-    echo -e "$SW360_PROPERTIES" > /etc/sw360/sw360.properties
-fi
 
 ################################################################################
 # Setup couchdb
@@ -102,8 +108,8 @@ echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/couchdb.properties
 if [ "$COUCHDB_USER" ]; then
     echo "couchdb.user = $COUCHDB_USER" >> /etc/sw360/couchdb.properties
 fi
-if [ "$COUCHDB_PASSWORD" ]; then
-    echo "couchdb.password = $COUCHDB_PASSWORD" >> /etc/sw360/couchdb.properties
+if [ -f "$COUCHDB_PASSWORD_FILE" ]; then
+    echo "couchdb.password = $(cat "$COUCHDB_PASSWORD_FILE")" >> /etc/sw360/couchdb.properties
 fi
 echo >> /etc/sw360/couchdb.properties
 
@@ -167,21 +173,14 @@ if [ "$FOSSOLOGY_HOST" ] && [ "$FOSSOLOGY_PORT" ]; then
     if [ "$FOSSOLOGY_USER" ]; then
         echo "fossology.user = $FOSSOLOGY_USER" >> /etc/sw360/fossology.properties
     fi
-    if [ "$FOSSOLOGY_KEY_PRIV" ]; then
-        echo "$FOSSOLOGY_KEY_PRIV" > /etc/sw360/fossology.id_rsa
+    if [ -f /run/secrets/fossology.id_rsa ]; then
+        ln -s /run/secrets/fossology.id_rsa /etc/sw360/fossology.id_rsa
         chmod 600 /etc/sw360/fossology.id_rsa
     fi
-    if [ "$FOSSOLOGY_KEY_PUB" ]; then
-        echo "$FOSSOLOGY_KEY_PUB" > /etc/sw360/fossology.id_rsa.pub
+    if [ -f /run/secrets/fossology.id_rsa.pub ]; then
+        ln -s /run/secrets/fossology.id_rsa.pub /etc/sw360/fossology.id_rsa.pub
         chmod 600 /etc/sw360/fossology.id_rsa.pub
     fi
-fi
-
-################################################################################
-# Setup for ldap importer
-mkdir -p /etc/ldap-importer
-if [[ $LDAP_IMPORTER_CONFIGURATION ]]; then
-    echo -e "$LDAP_IMPORTER_CONFIGURATION" >> /etc/ldap-importer/ldapimporter.properties
 fi
 
 ################################################################################

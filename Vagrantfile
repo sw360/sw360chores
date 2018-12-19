@@ -39,8 +39,9 @@ Vagrant.configure(2) do |config|
 
   config.vm.provision "shell", inline: <<-SHELL
 set -xe
+echo deb http://ftp.debian.org/debian stretch-backports main contrib > /etc/apt/sources.list.d/stretch-backports.list
 apt-get update
-apt-get install -y curl git unzip
+apt-get install -y curl git unzip virtualbox-guest-dkms linux-headers-$(uname -r)
 type docker &> /dev/null || \
     curl -sSL https://get.docker.com/ | sh
 usermod -a -G docker vagrant

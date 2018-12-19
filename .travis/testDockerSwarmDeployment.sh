@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------------------------
-# Copyright Siemens AG, 2017.
-# Copyright Bosch Software Innovations GmbH, 2017.
+# Copyright Bosch Software Innovations GmbH, 2019.
 # Part of the SW360 Portal Project.
 #
 # Copying and distribution of this file, with or without modification,
@@ -15,19 +14,7 @@ set -e
 
 ################################################################################
 # run
-
-## Tomcat
-assertTomcat
-# if [ "$DEV_MODE" == "true" ]; then
-#     assertLiferayViaHTTP
-# fi
 assertLiferayViaNginx
-# if [ "$DEV_MODE" != "true" ]; then
-#     assertNoTomcatDebugPort
-# fi
-
-## Couchdb
-assertCouchdb
-# if [ "$DEV_MODE" == "true" ]; then
-#     assertCouchdbViaHTTP
-# fi
+assertNoTomcatDebugPort
+assertNoCouchdbPort
+assertIsSwarmMode
