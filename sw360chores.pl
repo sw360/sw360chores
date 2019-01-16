@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
 # Copyright Bosch Software Innovations GmbH, 2017.
+# Copyright Siemens AG, 2019.
 # Part of the SW360 Portal Project.
 #
 # All rights reserved. This program and the accompanying materials
@@ -44,6 +45,8 @@ use feature qw(say);
     ./sw360chores.pl --prod [options] [-- arguments for docker-compose]
   ## enable cve-search server
     ./sw360chores.pl --cve-search [options] [-- arguments for docker-compose]
+  ## disable quick deploy
+    ./sw360chores.pl --no-quick-deploy [options] [-- arguments for docker-compose]
 
   # evironmental variables
     $SW360CHORES_VERSION
@@ -86,7 +89,7 @@ my $cpDeployDir;
 my $backupDir = '';
 my $restoreDir = '';
 my $debug = '';
-
+my $quickDeploy = 1;
 { # parse config and read command line arguments
     my $configFile = "./configuration/configuration.pl";
     if(-e $configFile) {
@@ -134,6 +137,9 @@ my $debug = '';
             $restoreDir = realpath($opt_value);
         },
         # misc
+        'no-quick-deploy' => sub {
+            $quickDeploy = '';
+        },
         'help' => sub {pod2usage();},
         'debug' => \$debug
         ) or pod2usage();
@@ -156,6 +162,7 @@ if($debug) {
     say STDERR "    \$backupDir    = $backupDir";
     say STDERR "    \$restoreDir   = $restoreDir";
     say STDERR "    \$debug        = $debug";
+    say STDERR "    \$quickDeploy  = $quickDeploy";
     say STDERR "  environmental variables:";
     say STDERR "    SW360CHORES_VERSION = $ENV{SW360CHORES_VERSION}" if defined($ENV{SW360CHORES_VERSION});
     say STDERR "    SW360_VERSION = $ENV{SW360_VERSION}" if defined($ENV{SW360_VERSION});
@@ -257,10 +264,29 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         if ($prod) {
             push(@toCall, "-f", "deployment/docker-compose.prod.yml");
         }else{
+            $ENV{'DEVELOPMENT_MODE'} = 1;
+
             mkdir "_deploy" if ! -d "_deploy";
             push(@toCall, "-f", "deployment/docker-compose.dev.yml");
             if($cveSearch) {
                 push(@toCall, "-f", "deployment/docker-compose.dev.cve-search-server.yml");
+            }
+
+            if($quickDeploy) {
+                $ENV{'QUICK_DEPLOY'} = 1;
+
+                if(!defined $ENV{'SW360_REPO_PATH'}) {
+                    say "SW360_REPO_PATH non set. Defaulting to [../sw360].";
+                    $ENV{'SW360_REPO_PATH'} = realpath(getcwd() . '/../sw360');
+                }
+                $ENV{'PORTLET_WEBAPP_SRC'} = $ENV{'SW360_REPO_PATH'} . "/frontend/sw360-portlet/src/main/webapp";
+                say "===>";
+                say "===> Quick Deploy will be activated. Portlet sources are loaded from [" . $ENV{'PORTLET_WEBAPP_SRC'} . "].";
+                say "===>";
+            } else {
+                # Use dummy dir for volume because we cannot disable the volume by condition in the docker compose file
+                mkdir ".quickdeploy" if ! -d ".quickdeploy";
+                $ENV{'PORTLET_WEBAPP_SRC'} = ".quickdeploy";
             }
         }
         if($watchtower) {
@@ -311,8 +337,13 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
 
     sub dockerRun {
         my ($name, @args) = @_;
-        unshift @args, ("run", "-it", "sw360/$name");
+        unshift @args, ("run", "-it");
 
+        if(!$prod) {
+            unshift(@args, ("-e", "DEVELOPMENT_MODE=1"));
+        }
+
+        unshift(@args, "sw360/$name");
         say "INFO: docker run $name";
         docker(@args);
     }

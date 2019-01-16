@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # Copyright Bosch Software Innovations GmbH, 2016 - 2017.
+# Copyright Siemens AG, 2019.
 # Part of the SW360 Portal Project.
 #
 # All rights reserved. This program and the accompanying materials
@@ -221,10 +222,26 @@ fi
 ################################################################################
 # Startup apache
 CATALINA_OPTS="-Dorg.ektorp.support.AutoUpdateViewOnChange=true"
+
+if [ "$DEVELOPMENT_MODE" = "1" ]; then
+    echo "===>"
+    echo "===> Activate developer properties"
+    echo "===>"
+    CATALINA_OPTS+=" -Dexternal-properties=portal-developer.properties"
+fi
+
 if [ "$TOMCAT_DEBUG_PORT" ] && [[ "$TOMCAT_DEBUG_PORT" =~ ^[0-9]+$ ]]; then
     CATALINA_OPTS+=" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${TOMCAT_DEBUG_PORT}"
 fi
 DB_TYPE="$DB_TYPE" CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/bin/startup.sh
 
 ################################################################################
+
+if [ "$QUICK_DEPLOY" = "1" ]; then
+    echo "===>"
+    echo "===> Starting QuickDeploy..."
+    echo "===>"
+    /usr/local/bin/quickdeploy.sh /opt/sw360/quickdeploy /opt/sw360/webapps/sw360-portlet/ /opt/sw360/logs/quickdeploy.log &
+fi
+
 exec "$@"
