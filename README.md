@@ -8,26 +8,21 @@ It also contains tools for backing up and restoring of container states as well 
 You need
 - the perl interpreter to run `./sw360chores.pl`
 - `git` which is used in some prepare scripts 
-- a current version of docker (min 1.10) [https://docs.docker.com/]
-- docker-compose (min 1.8) [https://docs.docker.com/compose/install/]
+- a current version of docker (min 1.30) [https://docs.docker.com/]
+- docker-compose (min 1.21) [https://docs.docker.com/compose/install/]
 - some disk space at `/var`:
-  - **only sw360** needs around 1GB at `/var` and places the content of couchdb in
-  the local folder `./_couchdb`
-  - **with cve-search** needs around twice as much space at `/var` and places the
-  content of the mongodb (currently around 4GB) in a local folder `./_mongodb`
 - Internet connection at container build time to download docker images as well
   as Maven dependencies and internet connection at runtime to allow cve-search to
   crawl various external sources for security vulnerability entries.
 
 ## Overview
-A full setup together with a dockerized FOSSology on another host could look
-like this:
+A full setup together with a dockerized FOSSology on another host could look like this:
 ![Overview of the topology](./.documentation/sw360container-setup.png)
 
 # Usage
 
 This project should be controlled via the script `sw360chores.pl`.
-## Simple and fast startup
+## Simple and quick startup
 To build all images and start them simply use
 ```
 ./sw360chores.pl --build -- up
@@ -39,41 +34,79 @@ $ mvn install -P deploy -Ddeploy.dir=/ABSOLUTE/PATH/TO/sw360chores/_deploy -Dski
 ```
 After that you should follow the [next steps in the SW360 wiki](https://github.com/eclipse/sw360/wiki#portal-deployment-next-steps).
 
-## Configuration
-
-The configuration of passwords, volumes and other things is done in the files
-`configuration.yml`, `configuration.env` and `proxy.env`. The environment
-variables are not used while building. They are only used by the entrypoint
-scripts of the different containers and evaluated when the containers are
-actually started.
-
-##### About `configuration.env`
-Here you can define passwords for the databases.
-
-##### About `proxy.env`
-Here one can add proxy settings, which are passed to all docker-compose calls
-and into the containers, which need to connect to the internet.
-
-##### About `configuration.yml`
-This file contains configuration, which modifies the behaviour and configuration
-of container while running. It is only used while running the containers and
-has no implications on the build process.
-
-**Note:** in a company network it might be essential to trust some SSL
-certificates. This is done automatically by `./sw360/docker-entrypoint.sh` which
-parses the environmental variable `$HTTPS_HOSTS` which could be set in
-`configuration.yml`.
-This variable has to be a list of `hosts:port` values, i.e. something like
-```
-      - HTTPS_HOSTS=some.bdp_host.org:443,an.ldaps.host:636
-```
-
-
-## Complete description
+## Complete script usage description
 To get the complete description of how to use the script use
 ```
 ./sw360chores.pl --help
 ```
+
+## Configuration
+
+All configuration is done in the folder `./configuration/`, and the structure looks like:
+```
+configuration
+├── certs
+├── configuration.pl
+├── COUCHDB_PASSWORD
+├── nginx
+│   ├── nginx.fifo
+│   ├── nginx.key
+│   ├── nginx.pem
+│   └── regenerateCerts.sh
+├── POSTGRES_PASSWORD
+├── proxy.env
+└── sw360
+    ├── sw360.env
+    ├── fossology
+    │   ├── fossology.id_rsa
+    │   └── fossology.id_rsa.pub
+    ├── ldapimporter.properties
+    ├── portal-ext.properties
+    └── sw360.properties
+```
+**Note:** The content of `./configuration/` is only runtime configuration which is partially used on build time (e.g. `proxy.env` and `configuration.pl`), but should not be persisted in the generated images.
+
+#### The file `./configuration/certificates`
+This file should contain the TLS certificates of services the server wants to talk to. This should contain e.g. the companies root certificate.
+
+It should contain the certificates concatenated in one file, separated by a newline.
+
+#### The file `./configuration/configuration.pl`
+This contains some configuration for the `sw360chores.pl`.
+Most of the flags can also be overwritten via CLI-flags.
+
+#### The file `./configuration/COUCHDB_PASSWORD`
+This file just contains the password for couchdb and it is added as secret to the containers.
+
+#### The folder `./configuration/nginx/`
+This folder contains all files necessary for the https termination via nginx.
+As default this contains an unsafe key-pair.
+
+There is also the file `./configuration/nginx/regenerateCerts.sh`, which is used for regenerating the unsafe key-pair.
+
+#### The file `./configuration/POSTGRES_PASSWORD`
+This file just contains the password for postgres and it is added as secret to the containers.
+
+#### The file `./configuration/proxy.env`
+Here one can add proxy settings, which are passed to all docker-compose calls and into the containers, which need to connect to the internet.
+
+#### The folder `./configuration/sw360/`
+
+The file `./configuration/sw360/sw360.env` can be used to tweak some runtime environment variables.
+
+The files `ldapimporter.properties`, `portal-ext.properties` and `sw360.properties` are placed at `/etc/sw360/` in the container and can be used to configure the corresponding parts.
+In these files are variables replaced with environment variables.
+
+#### The folder `./configuration/sw360/fossology/**
+This folder contains the rsa-key-pair used for the SSH connection to the FOSSology server necessary for the upload to FOSSology functionality.
+
+**Note:** which server to use is configured in `./configuration/sw360/sw360.env`.
+
+### Migration from old `./configuration.yml` to the new `./configuration/` folder
+
+Starting with the old configuration, it should be easy to move all configuration to the corresponding files in `./configuration/`.
+
+# Advanced usage:
 
 #### Logging
 For implementing a centralized logging we recomend the
@@ -88,6 +121,20 @@ The `./sw360chores.pl` command has the optional parameters `--backup` and
 `--restore` which allow to write the content of all related volumes to tar
 files, which are placed in the folder defined as `BACKUP_FOLDER` in
 `./configuration.env`.
+
+#### Backup of postgres sql data
+To generate a dump:
+```bash
+$ docker exec -t sw360postgres pg_dumpall -c -U postgres > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
+```
+
+#### Using sw360chores together with docker swarm
+To deploy the configured deployment to a swarm, one should use the commands
+```
+$ ./sw360chores.pl --swarm --build --prod [...]
+$ docker stack deploy --compose-file <(./sw360chores.pl --prod --swarm -- config) sw360
+```
+**Note:** This feature is currently supported but might be dropped soon in the future. If you plan to depend on that, please communicate that back to the project.
 
 ## Vagrant for testing / demonstration
 
@@ -105,17 +152,18 @@ $ vagrant ssh -c "/sw360chores/sw360chores.pl -- logs -f"
 More description can be found in the file `./Vagrantfile`.
 
 # About the folder structure
-Each subfolder contains its own readme describing explicitly how to use the
-corresponding content.
 
-## The folder `docker-images/`
+## The folder `./configuration/`
+This folder was explained above.
+
+## The folder `./docker-images/`
 This folder contains the Dockerfiles and scripts to build the images.
 
-## The folder `deployment/`
+## The folder `./deployment/`
 This folder contains the docker-compose files, which describe how the images
 should be configured.
 
-## The folder `miscellaneous/`
+## The folder `./miscellaneous/`
 This folder contains the important file `test_users_with_passwords_12345.csv`,
 which contains example users which can be used in an development or test
 setup. All created users have the password `12345`.

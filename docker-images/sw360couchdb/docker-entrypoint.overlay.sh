@@ -21,5 +21,10 @@ else
     fi
 fi
 
+COUCHDB_PASSWORD_FILE=/run/secrets/COUCHDB_PASSWORD
+if [ -f "$COUCHDB_PASSWORD_FILE" ]; then
+    export COUCHDB_PASSWORD=$(cat "$COUCHDB_PASSWORD_FILE")
+fi
+
 exec /docker-entrypoint.sh "$@"
 

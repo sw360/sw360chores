@@ -12,16 +12,6 @@ ENV _update="apt-get update"
 ENV _install="apt-get install -y --no-install-recommends"
 ENV _cleanup="eval apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*"
 
-RUN nginx_cert_dir='/etc/nginx/certs' \
-    nginx_key='nginx.key' \
-    nginx_cert='nginx.pem' \
-    password_file='fifo' \
-    set -x \
- && $_update && $_install openssl && $_cleanup \
- && mkdir -p $nginx_cert_dir \
- && openssl req -newkey rsa:2048 -nodes -keyout "$nginx_cert_dir/$nginx_key" -x509 -days 365 -out "$nginx_cert_dir/$nginx_cert" -subj '/CN=sw360.localdomain' \
- && touch "$nginx_cert_dir/fifo"
-
 EXPOSE 8443
 
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh

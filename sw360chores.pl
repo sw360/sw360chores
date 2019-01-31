@@ -50,6 +50,11 @@ use feature qw(say);
       is the version of the chores containers which will be used for tagging
     $SW360_VERSION
       is the version of sw360 which will be used for tagging the productive filled image
+    $BUILD_NUMBER
+      is used for tagging
+
+  # configuration
+    all configuration is contained in the folder ./configuration
 
   # examples:
   ## build and pull all Images, start the containers and detach:
@@ -65,49 +70,99 @@ use feature qw(say);
 
 =cut
 
+################################################################################
+# read options
+my $projectName = 'sw360';
 my $build = '';
 my $save = '';
 my $pushTo = '';
 my $cleanup = '';
 my $prod = '';
+my $swarm = '';
 my $cveSearch = '';
-my $cpWebappsDir = '';
-my $cpDeployDir = '';
+my $watchtower = '';
+my $cpWebappsDir;
+my $cpDeployDir;
 my $backupDir = '';
 my $restoreDir = '';
 my $debug = '';
-GetOptions (
-    # handle imgaes
-    'build' => \$build,
-    'build-only=s' => \$build,
-    'save|save-images' => \$save,
-    'load|load-images' => sub {die "not implemented yet"},
-    'push-to=s' => \$pushTo,
-    # cleanup
-    'cleanup' => \$cleanup,
-    # control runtime
-    'prod' => \$prod,
-    'cve-search' => \$cveSearch,
-    'webapps|cp-webapps-from=s' => sub {
-        my ($opt_name, $opt_value) = @_;
-        $cpWebappsDir = realpath($opt_value);
-    },
-    'deploy|cp-deploy-from=s' => sub {
-        my ($opt_name, $opt_value) = @_;
-        $cpDeployDir = realpath($opt_value);
-    },
-    # backup and restore
-    'backup=s' => sub {
-        my ($opt_name, $opt_value) = @_;
-        $backupDir = realpath($opt_value);
-    },
-    'restore=s' => sub {
-        my ($opt_name, $opt_value) = @_;
-        $restoreDir = realpath($opt_value);
-    },
-    'help' => sub {pod2usage();},
-    'debug' => \$debug
-    ) or pod2usage();
+
+{ # parse config and read command line arguments
+    my $configFile = "./configuration/configuration.pl";
+    if(-e $configFile) {
+        my $config=do($configFile);
+        die "Error parsing $configFile: $@" if $@;
+        die "Error reading $configFile: $!" unless defined $config;
+
+        $projectName = $config->{'projectName'} // $projectName;
+        $prod = $config->{'prod'} // $prod;
+        $swarm = $config->{'swarm'} // $swarm;
+        $cveSearch = $config->{'cveSearch'} // $cveSearch;
+        $watchtower = $config->{'watchtower'} // $watchtower;
+        $debug = $config->{'debug'} // $debug;
+    }
+
+    GetOptions (
+        # handle imgaes
+        'build' => \$build,
+        'build-only=s' => \$build,
+        'save|save-images' => \$save,
+        'load|load-images' => sub {die "not implemented yet"},
+        'push-to=s' => \$pushTo,
+        # cleanup
+        'cleanup' => \$cleanup,
+        # control runtime
+        'prod' => \$prod,
+        'swarm' => \$swarm,
+        'cve-search' => \$cveSearch,
+        'watchtower' => \$watchtower,
+        'webapps|cp-webapps-from=s' => sub {
+            my ($opt_name, $opt_value) = @_;
+            $cpWebappsDir = realpath($opt_value);
+        },
+        'deploy|cp-deploy-from=s' => sub {
+            my ($opt_name, $opt_value) = @_;
+            $cpDeployDir = realpath($opt_value);
+        },
+        # backup and restore
+        'backup=s' => sub {
+            my ($opt_name, $opt_value) = @_;
+            $backupDir = realpath($opt_value);
+        },
+        'restore=s' => sub {
+            my ($opt_name, $opt_value) = @_;
+            $restoreDir = realpath($opt_value);
+        },
+        # misc
+        'help' => sub {pod2usage();},
+        'debug' => \$debug
+        ) or pod2usage();
+}
+$ENV{COMPOSE_PROJECT_NAME} = $projectName;
+
+if($debug) {
+    say STDERR "  variables:";
+    say STDERR "    \$projectName  = $projectName";
+    say STDERR "    \$build        = $build";
+    say STDERR "    \$save         = $save";
+    say STDERR "    \$pushTo       = $pushTo";
+    say STDERR "    \$cleanup      = $cleanup";
+    say STDERR "    \$prod         = $prod";
+    say STDERR "    \$swarm        = $swarm";
+    say STDERR "    \$cveSearch    = $cveSearch";
+    say STDERR "    \$watchtower   = $watchtower";
+    say STDERR "    \$cpWebappsDir = " . ($cpWebappsDir  // "<undefined>");
+    say STDERR "    \$cpDeployDir  = " . ($cpDeployDir  // "<undefined>");
+    say STDERR "    \$backupDir    = $backupDir";
+    say STDERR "    \$restoreDir   = $restoreDir";
+    say STDERR "    \$debug        = $debug";
+    say STDERR "  environmental variables:";
+    say STDERR "    SW360CHORES_VERSION = $ENV{SW360CHORES_VERSION}" if defined($ENV{SW360CHORES_VERSION});
+    say STDERR "    SW360_VERSION = $ENV{SW360_VERSION}" if defined($ENV{SW360_VERSION});
+    say STDERR "    BUILD_NUMBER = $ENV{BUILD_NUMBER}" if defined($ENV{BUILD_NUMBER});
+    say STDERR "  arguments:";
+    say STDERR "    \@ARGV         = @ARGV";
+}
 
 ################################################################################
 my $imagesSrcDir = "./docker-images";
@@ -119,7 +174,7 @@ if($cveSearch) {
 my $sw360populatedName = "sw360populated";
 
 ################################################################################
-chdir dirname(realpath($0));
+chdir dirname(__FILE__);
 
 if ("$^O" eq "darwin") { # setup tempdir for darwin
     my $tmpdir = "./_tmp";
@@ -130,11 +185,11 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
 ################################################################################
 { # docker
     my @dockerCmd = ("docker");
-    my @dockerComposeCmd = ("docker-compose");
+    my @dockerComposeCmd = ("docker-compose", "-p", $projectName);
 
-    if (-f "proxy.env") {
+    if (-f "configuration/proxy.env") {
         my $addEnv = '';
-        open my $in, "<:encoding(utf8)", "proxy.env" or die "proxy.env: $!";
+        open my $in, "<:encoding(utf8)", "configuration/proxy.env" or die "configuration/proxy.env: $!";
         while (my $line = <$in>) {
             chomp $line;
             if ($line && ! ($line =~ m/#.*/)){
@@ -150,9 +205,11 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         }
     }
 
-    if (system("docker info &> /dev/null") != 0) {
+    if (system("docker info >/dev/null 2>&1") != 0) {
         say "INFO: add sudo to docker commands";
+        unshift @dockerCmd, "-E"; # keep the environmental variables
         unshift @dockerCmd, "sudo";
+        unshift @dockerComposeCmd, "-E"; # keep the environmental variables
         unshift @dockerComposeCmd, "sudo";
     }
 
@@ -163,7 +220,7 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         push(@toCall, @dockerCmd);
         push(@toCall, @args);
 
-        say "DEBUG: call: @toCall" if $debug;
+        say STDERR "DEBUG: call: @toCall" if $debug;
         if (! $nonInteractive) {
             0 == system(@toCall)
                 or die "failed...";
@@ -189,6 +246,11 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
 
         push(@toCall, @dockerComposeCmd);
         push(@toCall, "-f", "deployment/docker-compose.yml");
+        if(! $swarm) {
+            push(@toCall, "-f", "deployment/docker-compose.compose.yml");
+        }else{
+            push(@toCall, "-f", "deployment/docker-compose.swarm.yml");
+        }
         if($cveSearch) {
             push(@toCall, "-f", "deployment/docker-compose.cve-search-server.yml");
         }
@@ -201,9 +263,12 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
                 push(@toCall, "-f", "deployment/docker-compose.dev.cve-search-server.yml");
             }
         }
+        if($watchtower) {
+            push(@toCall, "-f", "deployment/docker-compose.watchtower.yml");
+        }
         push(@toCall, @args);
 
-        say "DEBUG: call: @toCall" if $debug;
+        say STDERR "DEBUG: call: @toCall" if $debug;
         if (! $nonInteractive) {
             0 == system(@toCall)
                 or die "failed...";
@@ -293,7 +358,8 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         my ($target, $imageTag) = @_;
 
         say "INFO: docker push $imageTag to $target";
-        docker(("image","push", "${target}:${imageTag}"));
+        docker(("tag",$imageTag, "${target}/${imageTag}"));
+        docker(("image","push", "${target}/${imageTag}"));
     }
 }
 
@@ -358,10 +424,10 @@ sub buildPopulatedSW360 {
         }
     }
 
-    if (! "$cpWebappsDir" || ! -d "$cpWebappsDir") {
+    if (! $cpWebappsDir || ! -d "$cpWebappsDir") {
         die "please set webapps src folder via --webapps=/PATH/TO/WEBAPPS";
     }
-    if (! "$cpDeployDir" || ! -d "$cpDeployDir") {
+    if (! $cpDeployDir || ! -d "$cpDeployDir") {
         die "please set deploy src folder via --deploy=/PATH/TO/DEPLOY";
     }
 
@@ -426,6 +492,8 @@ sub cleanupAll {
     foreach my $imageId (@images) {
         dockerRmi $imageId;
     }
+    system(("./docker-images/couchdb-lucene/prepare.sh", "--cleanup"));
+    system(("./miscellaneous/prepare-liferay/prepare.sh", "--cleanup"));
 }
 
 ################################################################################
@@ -436,7 +504,7 @@ sub copyToSW360Container {
     if ( -d $srcDir) {
         my @wars = glob("$srcDir/*.war");
         foreach my $war (@wars) {
-            dockerCp($war, "sw360:$targetDir");
+            dockerCp($war, "${projectName}_sw360:$targetDir");
         }
     }
 }
