@@ -31,7 +31,7 @@ if [ ! -f "$DIR/$TARGET" ]; then
     TMP=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXX)
     git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMP/couchdb-lucene.git"
 
-    cmdMvn="mvn -Dhttp.proxyHost=$proxy_host -Dhttp.proxyPort=$proxy_port -Dhttps.proxyHost=$proxy_host -Dhttps.proxyPort=$proxy_port -Dhttp.nonProxyHosts=localhost"
+    cmdMvn="mvn -DskipTests -Dhttp.proxyHost=$proxy_host -Dhttp.proxyPort=$proxy_port -Dhttps.proxyHost=$proxy_host -Dhttps.proxyPort=$proxy_port -Dhttp.nonProxyHosts=localhost"
     echo "DEBUG: $cmdMvn"
     if [[ $1 == "build-without-docker" ]]; then
         (

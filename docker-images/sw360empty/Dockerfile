@@ -23,8 +23,6 @@ RUN cp -r /usr/local/tomcat/native-jni-lib $TOMCAT_NATIVE_LIBDIR \
 
 WORKDIR /opt/sw360
 
-VOLUME [ "/opt/sw360" ]
-
 EXPOSE 8080
 
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh

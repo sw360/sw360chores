@@ -9,7 +9,7 @@
 # This uses the docker config feature, which only works with stack with API 1.30+
 # see: https://docs.docker.com/engine/reference/commandline/config/
 
-version: '3.7'
+version: '3.5'
 
 configs:
   sw360.properties:
