@@ -48,6 +48,7 @@ configuration
 ├── certs
 ├── configuration.pl
 ├── COUCHDB_PASSWORD
+├── COUCHDB_USER
 ├── nginx
 │   ├── nginx.fifo
 │   ├── nginx.key
@@ -74,6 +75,9 @@ It should contain the certificates concatenated in one file, separated by a newl
 #### The file `./configuration/configuration.pl`
 This contains some configuration for the `sw360chores.pl`.
 Most of the flags can also be overwritten via CLI-flags.
+
+#### The file `./configuration/COUCHDB_USER`
+This file just contains the user for CouchDB and it is set up as an environment variable for docker compose.
 
 #### The file `./configuration/COUCHDB_PASSWORD`
 This file just contains the password for CouchDB and it is added as secret to the containers.

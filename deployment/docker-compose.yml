@@ -15,6 +15,8 @@ version: '3.5'
 secrets:
   POSTGRES_PASSWORD:
     file: ../configuration/POSTGRES_PASSWORD
+  COUCHDB_USER:
+    file: ../configuration/COUCHDB_USER
   COUCHDB_PASSWORD:
     file: ../configuration/COUCHDB_PASSWORD
   nginx_key:
@@ -66,19 +68,19 @@ services:
       - sw360postgres
       - sw360couchdb
     environment:
-      - PORT=${SW360_NGINX_PORT:-8443}
       - POSTGRES_USER=sw360
       - POSTGRES_HOST=sw360postgres
       - COUCHDB_HOST=sw360couchdb
-      - COUCHDB_USER=sw360
-      - POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
-      - COUCHDB_PASSWORD_FILE=/run/secrets/COUCHDB_PASSWORD
+      - FOSSOLOGY_USER=
+      - FOSSOLOGY_HOST=
+      - FOSSOLOGY_PORT=
     env_file:
       - ../configuration/sw360/sw360.env
     secrets:
       - fossology.id_rsa
       - fossology.id_rsa.pub
       - POSTGRES_PASSWORD
+      - COUCHDB_USER
       - COUCHDB_PASSWORD
       - certificates
     volumes:
@@ -106,9 +108,9 @@ services:
     networks:
       - sw360DBs
     environment:
-      - COUCHDB_USER=sw360
       - COUCHDB_LUCENE_HOST=sw360couchdb-lucene
     secrets:
+      - COUCHDB_USER
       - COUCHDB_PASSWORD
     volumes:
       - "SW360CouchDBVolume:/usr/local/var/lib/couchdb"
@@ -123,8 +125,8 @@ services:
       - sw360couchdb
     environment:
       - COUCHDB_HOST=sw360couchdb
-      - COUCHDB_USER=sw360
     secrets:
+      - COUCHDB_USER
       - COUCHDB_PASSWORD
 
 networks:

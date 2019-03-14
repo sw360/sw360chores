@@ -51,10 +51,12 @@
 
 set -e
 
+export TOMCAT=$(basename /opt/sw360/tomcat-*)
+
 ################################################################################
 # Setup JAVA_OPTS
 if [ "$JAVA_OPTS_EXT" ]; then
-    cat <<EOF >> /opt/sw360/bin/setenv.sh
+    cat <<EOF >> /opt/sw360/$TOMCAT/bin/setenv.sh
 JAVA_OPTS="\$JAVA_OPTS $JAVA_OPTS_EXT"
 export JAVA_OPTS
 EOF
@@ -63,16 +65,17 @@ fi
 ################################################################################
 # Setup serving of logs
 if [ "$SERVE_LOGS" ]; then
-    cat <<EOF > /opt/sw360/conf/Catalina/localhost/logs.xml
-<Context override="true" docBase="/opt/sw360/logs/" path="/logs" />
+    cat <<EOF > /opt/sw360/$TOMCAT/conf/Catalina/localhost/logs.xml
+<Context override="true" docBase="/opt/sw360/$TOMCAT/logs/" path="/logs" />
 EOF
 else
-    rm -f /opt/sw360/conf/Catalina/localhost/logs.xml
+    rm -f /opt/sw360/$TOMCAT/conf/Catalina/localhost/logs.xml
 fi
 
 ################################################################################
 # setup config files
 mkdir -p /etc/sw360/
+mkdir -p /etc/sw360/authorization
 if [[ -f /sw360.properties ]]; then
     envsubst < /sw360.properties > /etc/sw360/sw360.properties
 fi
@@ -80,35 +83,40 @@ if [[ -f /ldapimporter.properties ]]; then
     envsubst < /ldapimporter.properties > /etc/sw360/ldapimporter.properties
 fi
 if [ "$COUCHDB_HOST" ]; then
-    mkdir -p /etc/sw360/rest/
-    echo "couchdb:" > /etc/sw360/rest/application.yml
-    echo "  url: http://${COUCHDB_HOST}:5984" >> /etc/sw360/rest/application.yml
+    mkdir -p /etc/sw360/authorization/
+    echo "couchdb:" > /etc/sw360/authorization/application.yml
+    echo "  url: http://${COUCHDB_HOST}:5984" >> /etc/sw360/authorization/application.yml
     if [ "$COUCHDB_USER" ]; then
-        echo "  user: $COUCHDB_USER" >> /etc/sw360/rest/application.yml
+        echo "  user: $COUCHDB_USER" >> /etc/sw360/authorization/application.yml
     fi
     if [ "$COUCHDB_PASSWORD" ]; then
-        echo "  password: $COUCHDB_PASSWORD" >> /etc/sw360/rest/application.yml
+        echo "  password: $COUCHDB_PASSWORD" >> /etc/sw360/authorization/application.yml
     fi
 fi
 
 ################################################################################
 # Setup liferay ()
 EXT_PROPERTIES_FILE=/etc/sw360/portal-ext.properties
+if [[ $DEV_MODE = "1" ]]; then
+    export DEV_MODE_TEXT="true"
+    export DEV_MODE_TEXT_INVERTED="false"
+else
+    export DEV_MODE_TEXT="false"
+    export DEV_MODE_TEXT_INVERTED="true"
+fi
 if [[ -f /portal-ext.properties ]]; then
     envsubst < /portal-ext.properties > $EXT_PROPERTIES_FILE
 fi
-if [[ $PORT ]]; then
-    echo "web.server.https.port=$PORT" >> $EXT_PROPERTIES_FILE
-fi
+
 
 # Setup postgres for liferay
+POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
 if [ ! "$POSTGRES_HOST" ] || [ ! "$POSTGRES_USER" ] || ( [ ! -f "$POSTGRES_PASSWORD_FILE" ] && [ ! "$POSTGRES_PASSWORD"] ); then
     echo "postgres configuration incomplete"
     exit 1
 fi
-if [ -f "$POSTGRES_PASSWORD_FILE" ]; then
-    POSTGRES_PASSWORD=$(cat $POSTGRES_PASSWORD_FILE)
-fi
+POSTGRES_PASSWORD=$(cat "$POSTGRES_PASSWORD_FILE")
+
 cat <<EOF >> $EXT_PROPERTIES_FILE
 jdbc.default.driverClassName=org.postgresql.Driver
 jdbc.default.url=jdbc:postgresql://${POSTGRES_HOST:-localhost}:5432/sw360pgdb
@@ -125,16 +133,27 @@ if [ ! "$COUCHDB_HOST" ]; then
     exit 1
 fi
 echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/couchdb.properties
-if [ "$COUCHDB_USER" ]; then
-    echo "couchdb.user = $COUCHDB_USER" >> /etc/sw360/couchdb.properties
+echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/authorization/application.properties
+
+COUCHDB_USER_FILE=/run/secrets/COUCHDB_USER
+if [ -f "$COUCHDB_USER_FILE" ]; then
+    COUCHDB_USER=$(cat "$COUCHDB_USER_FILE")
+    if [ "$COUCHDB_USER" ]; then
+        echo "couchdb.user = $COUCHDB_USER" >> /etc/sw360/couchdb.properties
+        echo "couchdb.username = $COUCHDB_USER" >> /etc/sw360/authorization/application.properties
+    fi
 fi
+
+COUCHDB_PASSWORD_FILE=/run/secrets/COUCHDB_PASSWORD
 if [ -f "$COUCHDB_PASSWORD_FILE" ]; then
-    COUCHDB_PASSWORD="$(cat "$COUCHDB_PASSWORD_FILE")"
+    COUCHDB_PASSWORD=$(cat "$COUCHDB_PASSWORD_FILE")
+    if [ "$COUCHDB_PASSWORD" ]; then
+        echo "couchdb.password = $COUCHDB_PASSWORD" >> /etc/sw360/couchdb.properties
+        echo "couchdb.password = $COUCHDB_PASSWORD" >> /etc/sw360/authorization/application.properties
+    fi
 fi
-if [ "$COUCHDB_PASSWORD" ]; then
-    echo "couchdb.password = $COUCHDB_PASSWORD" >> /etc/sw360/couchdb.properties
-fi
-echo >> /etc/sw360/couchdb.properties
+
+
 
 ################################################################################
 # Setup for HTTPS hosts
@@ -219,7 +238,7 @@ if [ "$FOSSOLOGY_HOST" ] && [ "$FOSSOLOGY_PORT" ]; then
 
     FOSSOLOGY_KEY_LOCATION=${FOSSOLOGY_KEY_LOCATION:-/run/secrets/fossology.id_rsa}
     if [ -f "$FOSSOLOGY_KEY_LOCATION" ]; then
-        ln -s "$FOSSOLOGY_KEY_LOCATION" /etc/sw360/fossology.id_rsa
+        ln -s  "$FOSSOLOGY_KEY_LOCATION" /etc/sw360/fossology.id_rsa
         chmod 600 /etc/sw360/fossology.id_rsa
     fi
     FOSSOLOGY_PUBKEY_LOCATION=${FOSSOLOGY_PUBKEY_LOCATION:-/run/secrets/fossology.id_rsa.pub}
@@ -229,13 +248,47 @@ if [ "$FOSSOLOGY_HOST" ] && [ "$FOSSOLOGY_PORT" ]; then
     fi
 fi
 
+echo "===>"
+echo "===> Starting TomcatDeploy..."
+echo "===>"
+/usr/local/bin/tomcatdeploy.sh /opt/sw360/deploy/tomcat /opt/sw360/$TOMCAT/webapps /opt/sw360/logs/tomcatdeploy.log &
+
+################################################################################
+# Wait for postgres database to become available
+echo "===>"
+echo "===> Wait for postgres database on host [${POSTGRES_HOST:-localhost}:5432] to become available (max. 30s)"
+COUNTER=0
+while ! nc -z ${POSTGRES_HOST:-localhost} 5432; do
+    sleep 1 # wait for one second before check again
+
+    COUNTER=$((COUNTER + 1))
+    if [ $COUNTER -eq 30 ]; then
+        echo "Postgres database does not accept any connections. Exiting since Liferay would fail anyway."
+        exit 1
+    fi
+done
+echo "===>"
+
 ################################################################################
 # Startup apache
+
+# Enable JNI
+TOMCAT_NATIVE_LIBDIR=/opt/sw360/$TOMCAT/native-jni-lib
+LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOMCAT_NATIVE_LIBDIR"
+
+cp -r /usr/local/tomcat/native-jni-lib "$TOMCAT_NATIVE_LIBDIR"
+
+sed -i '/^(export )?LD_LIBRARY_PATH/d' /opt/sw360/$TOMCAT/bin/setenv.sh
+echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> /opt/sw360/$TOMCAT/bin/setenv.sh
+echo "export LD_LIBRARY_PATH" >> /opt/sw360/$TOMCAT/bin/setenv.sh
+
+CATALINA_HOME="/opt/sw360/$TOMCAT"
 CATALINA_OPTS="-Dorg.ektorp.support.AutoUpdateViewOnChange=true"
 if [ "$TOMCAT_DEBUG_PORT" ] && [[ "$TOMCAT_DEBUG_PORT" =~ ^[0-9]+$ ]]; then
     CATALINA_OPTS+=" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${TOMCAT_DEBUG_PORT}"
 fi
-DB_TYPE="$DB_TYPE" CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/bin/startup.sh
+DB_TYPE="$DB_TYPE" CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/$TOMCAT/bin/startup.sh
 
 ################################################################################
+
 exec "$@"

@@ -27,9 +27,6 @@ client_max_body_size=${CLIENT_MAX_BODY_SIZE:-1000m}
 ################################################################################
 ## generate /etc/nginx/conf.d/nginx-sw360.conf
 cat <<EOF > "/etc/nginx/conf.d/nginx-${HOST}.conf"
-upstream ${HOST}-app {
-    server ${HOST}:${HOST_PORT} max_fails=3;
-}
 server {
     listen 8443 ssl default_server;
     listen [::]:8443 ssl default_server;
@@ -55,21 +52,23 @@ server {
     }
 
     location / {
+        resolver 127.0.0.11 valid=30s;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_redirect off;
-        proxy_pass  http://${HOST}-app;
+        proxy_pass  http://${HOST}:${HOST_PORT};
         proxy_read_timeout 3600s;
     }
 
     location ~*  \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        resolver 127.0.0.11 valid=30s;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header expires 7d;
         proxy_redirect off;
-        proxy_pass  http://${HOST}-app;
+        proxy_pass  http://${HOST}:${HOST_PORT};
         proxy_read_timeout 3600s;
     }
 }

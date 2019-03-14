@@ -28,7 +28,7 @@ testUrlWithSearchString () {
     needle="$2"
     testUrlHttpCode $url
     set -x
-    curl -S -k "$url" | grep -iq "$needle"
+    curl -Ss -k "$url" | grep -iq "$needle"
     set +x
 }
 
@@ -36,12 +36,12 @@ testUrlWithSearchString () {
 # asserts:
 assertLiferayViaNginx () {
     echo "assert that Liferay answers over HTTPS via nginx"
-    testUrlWithSearchString "https://localhost:8443" "<title>Welcome - SW360</title>"
+    testUrlWithSearchString "https://localhost:8443" "Welcome to Liferay Community Edition Portal"
 }
 
 assertLiferayViaHTTP () {
     echo "assert that Liferay answers over HTTP"
-    testUrlWithSearchString "http://localhost:8080" "<title>Welcome - SW360</title>"
+    testUrlWithSearchString "http://localhost:8080" "Welcome to Liferay Community Edition Portal"
 }
 
 assertNoTomcatDebugPort () {
@@ -74,10 +74,9 @@ assertNoCouchdbPort () {
 assertTomcat () {
     echo "assert that tomcat running (by examining the log)"
     set -x
-    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Loading file:/opt/portal-bundle.properties"
-    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Determine dialect for PostgreSQL"
-    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "org.apache.catalina.startup.Catalina start"
-    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -i "INFO: Server startup in"
+    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Loading file:/opt/sw360/portal-bundle.properties"
+    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "Using dialect org.hibernate.dialect.PostgreSQLDialect for PostgreSQL 9.6"
+    $DIR/sw360chores.pl -- logs sw360 2>/dev/null | grep -iq "org.apache.catalina.startup.Catalina.start Server startup in"
     set +x
 }
 
