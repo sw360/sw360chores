@@ -21,21 +21,28 @@ docker build \
  --build-arg https_proxy=http://127.0.0.1:3128 .
  ``` 
 
- ## Images
+## Images
 
- ### backend
+### backend
 
 This image will build all componentes in the backend module of sw360 and deploy them into an tomcat (9). If the container is started and the couch db connection was correct the thrift API will be available on port 8080. 
 
- ### couchdb
+### couchdb
 
  A simple couchdb container which has some specific configuration options for sw360 regards the integration with lucene
  
- ### couchdb-lucene
+### couchdb-lucene
 
 A container for the couchdb-lucene project 
 
- ### maven-thrift
+### maven-thrift
 
 A maven container which has added thrift support. This container is also used to build all sw360 application containers. 
 
+## Testing with the "old" image with the liferay frontend
+```
+$ ( cd /PATH/TO/SW360; mvn package -DskipTests )
+$ find /PATH/TO/SW360/frontend -name '*.war' -exec cp -v {} ../_deploy \;
+$ docker-compose -f docker-compose.yaml -f docker-compose.frontend.yaml up
+```
+After that SW360 can be accessed on `https://localhost:8443`.

@@ -7,17 +7,38 @@
 # http://www.eclipse.org/legal/epl-v10.html
 
 version: '3.5'
+
 services:
   maven-thrift:
     build: ./maven-thrift
     image: sw360/maven-thrift:latest
+    command: "true"
   sw360backend:
     build: ./backend
     image: sw360/backend:latest  
+    depends_on:
+      - sw360couchdb
+    environment:
+      COUCHDB_URL: 'http://sw360couchdb:5984'
+      COUCHDB_USER: 'sw360'
+      COUCHDB_PASSWORD: 'sw360'
+    ports:
+      - 8080:8080
   sw360couchdb:
     build: ./couchdb
     image: sw360/couchdb:latest   
+    environment:
+      COUCHDB_LUCENE_HOST: 'sw360couchdb-lucene'
+      COUCHDB_USER: 'sw360'
+      COUCHDB_PASSWORD: 'sw360'
+    ports:
+      - 5984:5984
   sw360couchdb-lucene:   
     build: ./couchdb-lucene
     image: sw360/couchdb-lucene:latest
-   
+    depends_on:
+      - sw360couchdb
+    environment:
+      COUCHDB_HOST: 'sw360couchdb'
+      COUCHDB_USER: 'sw360'
+      COUCHDB_PASSWORD: 'sw360'
