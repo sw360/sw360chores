@@ -1,0 +1,56 @@
+networks:
+  dev-sw360DBs: {}
+  dev-sw360backend: {}
+services:
+  maven-thrift:
+    build: ./maven-thrift
+    image: sw360/maven-thrift
+  dev-dev-sw360backend:
+    depends_on:
+    - dev-sw360couchdb
+    environment:
+      COUCHDB_USER: sw360
+      COUCHDB_PASSWORD: sw360fossy
+      COUCHDB_URL: 'http://dev-sw360couchdb:5984'
+    build: ./backend
+    image: sw360/backend:dev
+    networks:
+      dev-sw360backend: null
+      dev-sw360DBs: null
+    ports:
+    - published: 8891
+      target: 8080
+    restart: unless-stopped 
+  dev-sw360couchdb:
+    environment:
+      COUCHDB_LUCENE_HOST: dev-sw360couchdb-lucene
+      COUCHDB_USER: sw360
+      COUCHDB_PASSWORD: sw360fossy
+    build: ./couchdb
+    image: sw360/couchdb:dev
+    networks:
+      dev-sw360DBs: null
+    ports:
+    - published: 5984
+      target: 5984
+    restart: unless-stopped
+  dev-sw360couchdb-lucene:
+    container_name: dev_sw360_sw360couchdb-lucene
+    depends_on:
+    - dev-sw360couchdb
+    environment:
+      COUCHDB_HOST: dev-sw360couchdb
+      COUCHDB_USER: sw360
+      COUCHDB_PASSWORD: sw360fossy
+    build: ./couchdb-lucene
+    image: sw360/couchdb-lucene:dev
+    networks:
+      dev-sw360DBs: null
+    ports:
+    - published: 5985
+      target: 5985
+    restart: unless-stopped
+
+version: '3.5'
+
+
