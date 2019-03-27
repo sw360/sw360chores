@@ -11,22 +11,22 @@ version: '3.5'
 x-sw360-sw360-properties-mount:
   &sw360-sw360-properties-mount
   type: bind
-  source: ./docker-compose.frontend.sw360.properties
+  source: ../docker-images-frontend/sw360.properties
   target: /sw360.properties
   read_only: true
 x-sw360-portal-ext-properties-mount:
   &sw360-portal-ext-properties-mount
   type: bind
-  source: ../configuration/sw360/portal-ext.properties
+  source: ../../configuration/sw360/portal-ext.properties
   target: /portal-ext.properties
   read_only: true
 secrets:
   nginx_key:
-    file: ../configuration/nginx/nginx.key
+    file: ../../configuration/nginx/nginx.key
   nginx_pem:
-    file: ../configuration/nginx/nginx.pem
+    file: ../../configuration/nginx/nginx.pem
   nginx_fifo:
-    file: ../configuration/nginx/nginx.fifo
+    file: ../../configuration/nginx/nginx.fifo
 
 services:
   sw360postgres:
@@ -53,7 +53,7 @@ services:
     ports:
       - 5005:5005
     volumes:
-      - ../_deploy:/opt/sw360/deploy
+      - ../../_deploy:/opt/sw360/deploy
       - *sw360-sw360-properties-mount
       - *sw360-portal-ext-properties-mount
   sw360nginx:

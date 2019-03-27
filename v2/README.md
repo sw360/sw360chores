@@ -1,7 +1,16 @@
 # Docker Images for SW360 Project
 
+**This is work in progress**
+
+The goal of the content in this folder is to develop a new and more lightweight deployment, where the SW360 backend is separated from the frontends.
+This allows the containers to have a fast startup time and be small.
+
+The long term goal is to merge this with the top level deployment.
+
+This folder is not used by the `../sw360chores.pl` script, but it uses parts of the top level folder `../configuration`.
+
 ## Installation
-To build all images just run `docker-compose build` in this directory
+To build all images just run `docker-compose build` in the corresponding directories
 
 alternativly you can run docker build . within any of the folders to build the image manually
 
@@ -43,6 +52,6 @@ A maven container which has added thrift support. This container is also used to
 ```
 $ ( cd /PATH/TO/SW360; mvn package -DskipTests )
 $ find /PATH/TO/SW360/frontend -name '*.war' -exec cp -v {} ../_deploy \;
-$ docker-compose -f docker-compose.yaml -f docker-compose.frontend.yaml up
+$ docker-compose -f docker-images-backend/docker-compose.yaml -f docker-images-frontend/docker-compose.yaml up
 ```
 After that SW360 can be accessed on `https://localhost:8443`.
