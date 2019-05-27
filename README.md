@@ -76,7 +76,13 @@ This contains some configuration for the `sw360chores.pl`.
 Most of the flags can also be overwritten via CLI-flags.
 
 #### The file `./configuration/COUCHDB_PASSWORD`
-This file just contains the password for couchdb and it is added as secret to the containers.
+This file just contains the password for CouchDB and it is added as secret to the containers.
+
+To deactivate the authentication on CouchDB and start it in admin party mode, just call
+```
+$ echo > configuration/COUCHDB_PASSWORD
+```
+This might be necessary for running the SW360 tests against the exposed database.
 
 #### The folder `./configuration/nginx/`
 This folder contains all files necessary for the https termination via nginx.
