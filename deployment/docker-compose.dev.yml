@@ -10,7 +10,7 @@
 # sw360 environment. Use it together with the main docker-compose.yml
 # as described in README.md
 
-version: '3.7'
+version: '3.5'
 services:
 
   sw360nginx:

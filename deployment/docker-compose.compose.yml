@@ -8,7 +8,7 @@
 
 # This emulates the docker config feature for docker-compose, with read-only bind mounts
 
-version: '3.7'
+version: '3.5'
 
 x-sw360-sw360-properties-mount:
   &sw360-sw360-properties-mount

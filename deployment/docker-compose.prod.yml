@@ -10,7 +10,7 @@
 # the sw360 service and a couchdb and postgres that are required by sw360.
 # Use it as described in README.md
 
-version: '3.7'
+version: '3.5'
 services:
 
   sw360:
