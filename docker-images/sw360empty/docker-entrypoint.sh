@@ -79,6 +79,17 @@ fi
 if [[ -f /ldapimporter.properties ]]; then
     envsubst < /ldapimporter.properties > /etc/sw360/ldapimporter.properties
 fi
+if [ "$COUCHDB_HOST" ]; then
+    mkdir -p /etc/sw360/rest/
+    echo "couchdb:" > /etc/sw360/rest/application.yml
+    echo "  url: http://${COUCHDB_HOST}:5984" >> /etc/sw360/rest/application.yml
+    if [ "$COUCHDB_USER" ]; then
+        echo "  user: $COUCHDB_USER" >> /etc/sw360/rest/application.yml
+    fi
+    if [ "$COUCHDB_PASSWORD" ]; then
+        echo "  password: $COUCHDB_PASSWORD" >> /etc/sw360/rest/application.yml
+    fi
+fi
 
 ################################################################################
 # Setup liferay ()
