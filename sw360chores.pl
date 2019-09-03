@@ -15,7 +15,7 @@ use autodie;
 use Cwd qw(getcwd realpath);
 use File::Basename qw(dirname);
 use File::Copy qw(copy);
-use File::Path qw(remove_tree);
+use File::Path qw(remove_tree make_path);
 use Getopt::Long qw(GetOptions);
 use Pod::Usage;
 
@@ -258,6 +258,9 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
             push(@toCall, "-f", "deployment/docker-compose.prod.yml");
         }else{
             mkdir "_deploy" if ! -d "_deploy";
+            mkdir "_deploy/liferay" if ! -d "_deploy/liferay";
+            mkdir "_deploy/tomcat" if ! -d "_deploy/tomcat";
+
             push(@toCall, "-f", "deployment/docker-compose.dev.yml");
             if($cveSearch) {
                 push(@toCall, "-f", "deployment/docker-compose.dev.cve-search-server.yml");
@@ -416,9 +419,9 @@ sub buildPopulatedSW360 {
     sub copyWarsFromTo {
         my ($srcDir, $targetDir) = @_;
 
-        my @wars = glob("$srcDir/*.war");
+        my @wars = glob("$srcDir/*.{war,jar}");
         remove_tree($targetDir) if -d $targetDir;
-        mkdir $targetDir;
+        make_path($targetDir);
         for my $war (@wars) {
             copy($war, $targetDir);
         }
@@ -433,8 +436,8 @@ sub buildPopulatedSW360 {
 
     my $sw360PopulatedDir = "$imagesSrcDir/${sw360populatedName}";
 
-    copyWarsFromTo($cpWebappsDir, "$sw360PopulatedDir/_webapps");
-    copyWarsFromTo($cpDeployDir, "$sw360PopulatedDir/_deploy");
+    copyWarsFromTo($cpWebappsDir, "$sw360PopulatedDir/_deploy/tomcat");
+    copyWarsFromTo($cpDeployDir, "$sw360PopulatedDir/_deploy/liferay");
 
     my @args = ();
 

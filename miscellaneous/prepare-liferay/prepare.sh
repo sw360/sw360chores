@@ -11,14 +11,25 @@
 set -e
 cd "$(dirname "${BASH_SOURCE[0]}" )"
 DIR="$(pwd)"
-TARGET="sw360-liferay.tar.gz"
-LIFERAY="liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip"
-LIFERAY_CHECKSUM="99a292d3643cadf5d1c9098717ac984c"
+TARGET="sw360-liferay-7.2.0-GA1.tar.gz"
+LIFERAY="liferay-ce-portal-tomcat-7.2.0-ga1-20190531153709761.tar.gz"
+LIFERAY_CHECKSUM="e68ab5dae19063924ae8d7e7ea0078fa"
+
+function downloadModule {
+    URL="$1"
+    FILE=$(basename $URL)
+
+    echo -n -e "\t$FILE..."
+
+    if [ ! -f "$FILE" ]; then
+        curl -OsLC - "$URL"
+        echo "OK"
+    else
+        echo "SKIP"
+    fi
+}
 
 if [[ $1 == "--cleanup" ]]; then
-    if [ -f "$LIFERAY" ]; then
-        rm "$LIFERAY"
-    fi
     if [ -f "$TARGET" ]; then
         rm "$TARGET"
     fi
@@ -26,48 +37,65 @@ if [[ $1 == "--cleanup" ]]; then
 fi
 
 if [ ! -f "$TARGET" ]; then
+    cd downloads
+
     if [ ! -f "$LIFERAY" ]; then
         echo "... start downloading $LIFERAY (this can take some time)"
-        curl -OskLC - 'https://downloads.sourceforge.net/project/lportal/Liferay%20Portal/6.2.4%20GA5/liferay-portal-tomcat-6.2-ce-ga5-20151119152357409.zip'
+        curl -OsLC - 'https://downloads.sourceforge.net/project/lportal/Liferay%20Portal/7.2.0%20GA1/'"$LIFERAY"
     else
         echo "... the file $LIFERAY already exists and does not need to be downloaded again"
     fi
 
-    LIFERAY_ACTUAL_CHECKSUM=$(md5sum $LIFERAY)
-    if [[ "$LIFERAY_ACTUAL_CHECKSUM" != *"$LIFERAY_CHECKSUM"* ]]; then
+    LIFERAY_ACTUAL_CHECKSUM=$(md5sum $LIFERAY | cut -f 1 -d ' ')
+    if [[ "$LIFERAY_ACTUAL_CHECKSUM" != "$LIFERAY_CHECKSUM" ]]; then
         echo $LIFERAY_ACTUAL_CHECKSUM
         echo "the checksum of $DIR/$LIFERAY does not match"
         echo "the file might be corrput, please remove it and restart $0"
         exit 1
     fi
 
+    echo "...start downloading 3rd party dependencies"
+    mkdir -p modules
+    cd modules
+
+    downloadModule "https://search.maven.org/remotecontent?filepath=commons-codec/commons-codec/1.12/commons-codec-1.12.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/commons/commons-collections4/4.1/commons-collections4-4.1.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/commons/commons-csv/1.4/commons-csv-1.4.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=commons-io/commons-io/2.6/commons-io-2.6.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=commons-lang/commons-lang/2.4/commons-lang-2.4.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=commons-logging/commons-logging/1.2/commons-logging-1.2.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/google/code/gson/gson/2.8.5/gson-2.8.5.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/google/guava/guava/21.0/guava-21.0.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/2.9.8/jackson-annotations-2.9.8.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/2.9.8/jackson-core-2.9.8.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/2.9.8/jackson-databind-2.9.8.jar"
+
+    cd ../..
+
     echo "... start building $TARGET"
 
-    TMP=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXX)
-
-    unzip -q $LIFERAY -d $TMP
-    cd $TMP
-    cp -r liferay*/tomcat* ./sw360
-    rm -r liferay*
+    TMP="$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXX)"
+    tar -xzf "downloads/$LIFERAY" -C "$TMP"
+    cp downloads/modules/* "$TMP"/liferay*/osgi/modules/
+    cd "$TMP"
+    mv liferay* sw360
 
     # cleanup
-    rm -r $TMP/sw360/webapps/{calendar-portlet,docs,examples,host-manager,kaleo-web,manager,notifications-portlet,opensocial-portlet,resources-importer-web,sync-web,web-form-portlet} \
-          $TMP/sw360/RELEASE-NOTES \
-          $TMP/sw360/RUNNING.txt \
-          $TMP/sw360/bin/*.bat \
-          $TMP/sw360/bin/*.tar.gz || true
+    rm -r "$TMP"/sw360/tomcat-*/RELEASE-NOTES \
+          "$TMP"/sw360/tomcat-*/RUNNING.txt \
+          "$TMP"/sw360/tomcat-*/bin/*.bat \
+          "$TMP"/sw360/tomcat-*/bin/*.tar.gz || true
 
     # configure
-    sed -i 's/<http-method>GET<\/http-method>/<!-- \0 -->/' "$TMP/sw360/webapps/ROOT/WEB-INF/web.xml"
-    sed -i 's/<http-method>POST<\/http-method>/<!-- \0 -->/' "$TMP/sw360/webapps/ROOT/WEB-INF/web.xml"
-    cp $DIR/portal-bundle.properties $TMP/portal-bundle.properties
-    cp $DIR/setenv.sh $TMP/sw360/bin/setenv.sh
-    chmod +x $TMP/sw360/bin/setenv.sh
+    cp "$DIR/portal-bundle.properties" "$TMP/sw360/portal-bundle.properties"
+    cp "$DIR/setenv.sh" "$TMP"/sw360/tomcat-*/bin/setenv.sh
+    chmod +x "$TMP"/sw360/tomcat-*/bin/setenv.sh
 
     # pack
-    tar czf $DIR/$TARGET sw360 portal-bundle.properties
+    tar czf "$DIR/$TARGET" sw360
 
-    rm -r $TMP
+    rm -r "$TMP"
 else
     echo "... the file $TARGET already exists: skip"
 fi
+

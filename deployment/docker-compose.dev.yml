@@ -24,6 +24,7 @@ services:
     environment:
       - TOMCAT_DEBUG_PORT=5005
       - SERVE_LOGS=1
+      - DEV_MODE=1
     volumes:
       - ../_deploy:/opt/sw360/deploy
 
@@ -38,3 +39,4 @@ services:
   sw360couchdb-lucene:
     ports:
       - 5985:5985
+
