@@ -14,7 +14,7 @@ COPY _deploy/liferay/* /opt/sw360/deploy/liferay/
 RUN set -ex \
  && for war in /opt/sw360/deploy/tomcat/*.war; do \
       folder=$(basename $war .war); \
-      mkdir -p /opt/sw360/tomcat-*/webapps/$folder; \
-      unzip -q $war -d /opt/sw360/tomcat-*/webapps/$folder; \
+      mkdir -p /opt/sw360/tomcat-9.0.17/webapps/$folder; \
+      unzip -q $war -d /opt/sw360/tomcat-9.0.17/webapps/$folder; \
       rm $war; \
     done
