@@ -21,4 +21,4 @@ COPY tomcatdeploy.sh /usr/local/bin/tomcatdeploy.sh
 COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["tail", "-f", "/opt/sw360/tomcat-9.0.17/logs/catalina.out"]
+CMD tail -f /opt/sw360/$TOMCAT/logs/catalina.out
