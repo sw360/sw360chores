@@ -636,6 +636,6 @@ if (defined $ARGV[0]) {
 }
 
 if (! $prod) {
-    copyToSW360Container($cpWebappsDir, "/opt/sw360/webapps") if $cpWebappsDir;
-    copyToSW360Container($cpDeployDir, "/opt/sw360/deploy") if $cpDeployDir;
+    copyToSW360Container($cpWebappsDir, "/opt/sw360/deploy/tomcat") if $cpWebappsDir;
+    copyToSW360Container($cpDeployDir, "/opt/sw360/deploy/liferay") if $cpDeployDir;
 }
