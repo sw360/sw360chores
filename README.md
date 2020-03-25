@@ -30,7 +30,7 @@ To build all images and start them simply use
 To get a fully configured [SW360](https://github.com/eclipse/sw360) running, you need to compile the wars and place them into `./_deploy`.
 This can be done from within the SW360 project root with a single command via
 ```
-$ mvn install -P deploy -Ddeploy.dir=/ABSOLUTE/PATH/TO/sw360chores/_deploy -DskipTests
+$ mvn install -P deploy -Dbase.deploy.dir=/ABSOLUTE/PATH/TO/sw360chores/_deploy -DskipTests
 ```
 After that you should follow the [next steps in the SW360 wiki](https://github.com/eclipse/sw360/wiki#portal-deployment-next-steps).
 
