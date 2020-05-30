@@ -37,6 +37,7 @@ if [[ $1 == "--cleanup" ]]; then
 fi
 
 if [ ! -f "$TARGET" ]; then
+    mkdir -p downloads
     cd downloads
 
     if [ ! -f "$LIFERAY" ]; then
