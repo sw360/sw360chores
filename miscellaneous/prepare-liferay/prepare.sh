@@ -70,6 +70,12 @@ if [ ! -f "$TARGET" ]; then
     downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/2.9.8/jackson-annotations-2.9.8.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/2.9.8/jackson-core-2.9.8.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/2.9.8/jackson-databind-2.9.8.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/logging/log4j/log4j-api/2.7/log4j-api-2.7.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/logging/log4j/log4j-core/2.7/log4j-core-2.7.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/logging/log4j/log4j-impl/2.7/log4j-impl-2.7.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/logging/log4j/log4j-1.2-api/2.7/log4j-1.2-api-2.7.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/logging/log4j/log4j-jcl/2.7/log4j-jcl-2.7.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/logging/log4j/log4j-slf4j-impl/2.7/log4j-slf4j-impl-2.7.jar"
 
     cd ../..
 
