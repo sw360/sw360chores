@@ -164,6 +164,12 @@ if($debug) {
     say STDERR "    \@ARGV         = @ARGV";
 }
 
+# create proxy.env file from template if it does not exist yet
+if (not -e "configuration/proxy.env") {
+    say "INFO: creating proxy.env from template.";
+    copy ("configuration/proxy.env.template", "configuration/proxy.env");
+}
+
 ################################################################################
 my $imagesSrcDir = "./docker-images";
 my $saveDir = "./_images";
