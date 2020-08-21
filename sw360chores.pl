@@ -44,6 +44,8 @@ use feature qw(say);
     ./sw360chores.pl --prod [options] [-- arguments for docker-compose]
   ## enable cve-search server
     ./sw360chores.pl --cve-search [options] [-- arguments for docker-compose]
+  ## enable network=host when building docker images:
+    ./sw360chores.pl --net-host [options] [-- arguments for docker-compose]
 
   # evironmental variables
     $SW360CHORES_VERSION
@@ -86,6 +88,7 @@ my $cpDeployDir;
 my $backupDir = '';
 my $restoreDir = '';
 my $debug = '';
+my $netHost = '';
 
 { # parse config and read command line arguments
     my $configFile = "./configuration/configuration.pl";
@@ -135,7 +138,8 @@ my $debug = '';
         },
         # misc
         'help' => sub {pod2usage();},
-        'debug' => \$debug
+        'debug' => \$debug,
+        'net-host' => \$netHost
         ) or pod2usage();
 }
 $ENV{COMPOSE_PROJECT_NAME} = $projectName;
@@ -155,6 +159,7 @@ if($debug) {
     say STDERR "    \$cpDeployDir  = " . ($cpDeployDir  // "<undefined>");
     say STDERR "    \$backupDir    = $backupDir";
     say STDERR "    \$restoreDir   = $restoreDir";
+    say STDERR "    \$netHost      = $netHost";
     say STDERR "    \$debug        = $debug";
     say STDERR "  environmental variables:";
     say STDERR "    SW360CHORES_VERSION = $ENV{SW360CHORES_VERSION}" if defined($ENV{SW360CHORES_VERSION});
@@ -311,6 +316,9 @@ if ("$^O" eq "darwin") { # setup tempdir for darwin
         unshift(@args, ("--build-arg", "https_proxy=$ENV{'https_proxy'}")) if (defined $ENV{"https_proxy"});
         unshift(@args, ("--build-arg", "no_proxy=$ENV{'no_proxy'}")) if (defined $ENV{"no_proxy"});
 
+        if($netHost) {
+            unshift(@args, "--network=host")
+        }
         unshift(@args, ("build", "-t", "sw360/$name", "--rm=true", "--force-rm=true"));
         push @args, "$imagesSrcDir/$name/";
 
@@ -383,7 +391,11 @@ sub prepareImage {
     if (-x $prepareScriptPl) {
         do $prepareScriptPl;
     } elsif (-x $prepareScriptSh) {
-        0 == system($prepareScriptSh)
+        my @cmd = ($prepareScriptSh);
+        if($netHost) {
+            push @cmd, ("--net-host");
+        }
+        0 == system(@cmd)
             or die "failed to prepare $name";
     }
 }

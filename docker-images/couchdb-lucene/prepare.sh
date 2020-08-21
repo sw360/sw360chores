@@ -13,7 +13,22 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BRANCH="v2.1.0"
 TARGET="couchdb-lucene-2.1.0-dist.zip"
 
-if [[ $1 == "--cleanup" ]]; then
+CLEANUP=false
+NO_DOCKER=false
+NET_HOST=false
+
+for arg in "$@"
+do
+  if [[ $arg == "--cleanup" ]]; then
+    CLEANUP=true
+  elif [[ $arg == "build-without-docker" ]]; then
+    NO_DOCKER=true
+  elif [[ $arg == "--net-host" ]]; then
+    NET_HOST=true
+  fi    
+done
+
+if [[ "$CLEANUP" == true ]]; then
     if [ -f "$TARGET" ]; then
         rm "$TARGET"
     fi
@@ -31,9 +46,12 @@ if [ ! -f "$DIR/$TARGET" ]; then
     TMP=$(mktemp -d ${TMPDIR:-/tmp}/tmp.XXXXXXX)
     git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMP/couchdb-lucene.git"
 
-    cmdMvn="mvn -DskipTests -Dhttp.proxyHost=$proxy_host -Dhttp.proxyPort=$proxy_port -Dhttps.proxyHost=$proxy_host -Dhttps.proxyPort=$proxy_port -Dhttp.nonProxyHosts=localhost"
+    cmdMvn="mvn -DskipTests "
+    if [ "$NET_HOST" -eq false ] || [ "$NO_DOCKER" -eq true ]; then
+      cmdMvn="$cmdMvn -Dhttp.proxyHost=$proxy_host -Dhttp.proxyPort=$proxy_port -Dhttps.proxyHost=$proxy_host -Dhttps.proxyPort=$proxy_port -Dhttp.nonProxyHosts=localhost"
+    fi
     echo "DEBUG: $cmdMvn"
-    if [[ $1 == "build-without-docker" ]]; then
+    if [[ "$NO_DOCKER" == true ]]; then
         (
             cd "$TMP/couchdb-lucene.git"
             $cmdMvn
@@ -45,6 +63,10 @@ if [ ! -f "$DIR/$TARGET" ]; then
             }
         }
 
+        paramHost=""
+        if [ "$NET_HOST" == true ]; then
+          paramHost="--net=host"
+        fi
         cmdDocker="$(addSudoIfNeeded) docker"
         $cmdDocker pull maven:3-jdk-8-alpine
         $cmdDocker run -i \
@@ -52,6 +74,7 @@ if [ ! -f "$DIR/$TARGET" ]; then
                    -v "$TMP/couchdb-lucene.git:/couchdb-lucene" \
                    --env MAVEN_CONFIG=/tmp/ \
                    -w /couchdb-lucene \
+                   $paramHost \
                    maven:3-jdk-8-alpine \
                    $cmdMvn -Dmaven.repo.local=/tmp/m2/repository
     fi
