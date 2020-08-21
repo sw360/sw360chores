@@ -41,6 +41,7 @@ echo -e "\n========================"
 echo "Start watching for events [close_write] in [$WATCH_DIR] on $(date)"
 echo "========================"
 
+mkdir -p "$WATCH_DIR"
 echo -n "Starting: "
 echo inotifywait --quiet --monitor --event close_write --recursive --format '%w%f' "$WATCH_DIR"
 
