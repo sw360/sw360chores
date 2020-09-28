@@ -9,3 +9,4 @@ _*
 .idea
 *.war
 /miscellaneous/prepare-liferay/downloads
+/configuration/proxy.env

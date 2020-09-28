@@ -55,7 +55,7 @@ configuration
 │   ├── nginx.pem
 │   └── regenerateCerts.sh
 ├── POSTGRES_PASSWORD
-├── proxy.env
+├── proxy.env.template
 └── sw360
     ├── sw360.env
     ├── fossology
@@ -97,8 +97,11 @@ There is also the file `./configuration/nginx/regenerateCerts.sh`, which is used
 #### The file `./configuration/POSTGRES_PASSWORD`
 This file just contains the password for postgres and it is added as secret to the containers.
 
-#### The file `./configuration/proxy.env`
-Here one can add proxy settings, which are passed to all docker-compose calls and into the containers, which need to connect to the internet.
+#### The file `./configuration/proxy.env.template`
+This is a template file for configuring proxy settings. To enable support for a proxy, copy this file to a file named `proxy.env` (in
+the same folder). In `proxy.env` one can add proxy settings, which are passed to all docker-compose calls and into the containers, which need to connect to the internet.
+
+_Note:_ The file `proxy.env` is excluded from source control; so it is not shown as outgoing changes.
 
 #### The folder `./configuration/sw360/`
 
