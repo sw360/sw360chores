@@ -6,7 +6,7 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM couchdb:1.7.1
+FROM couchdb:2.1.2
 MAINTAINER admin@sw360.org
 
 RUN mkdir /initial-data

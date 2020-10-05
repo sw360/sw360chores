@@ -7,9 +7,9 @@
 # http://www.eclipse.org/legal/epl-v10.html
 
 
-FROM maven:3-jdk-8-alpine
+FROM maven:3.6.3-jdk-11
 ENV BRANCH="v2.1.0"
-RUN apk update && apk add git
+RUN apt-get update && apt-get install -y git
 RUN git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene             
 
 #Workaround for MVN_PROXY
