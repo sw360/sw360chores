@@ -8,15 +8,19 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM maven:3.5.0-jdk-8-alpine
+FROM maven:3.6.3-jdk-11
+
+ARG sw360_tag
 
 RUN set -x \
- &&  apk --update add su-exec git wget \
- && wget https://raw.githubusercontent.com/eclipse/sw360/4a1f90c2a436ed2334d414511cdee6c157a55aec/scripts/install-thrift.sh \
+ &&  apt-get update && apt-get install -y wget \
+ && wget https://raw.githubusercontent.com/eclipse/sw360/$sw360_tag/scripts/install-thrift.sh \
  && chmod +x /install-thrift.sh \
  && ./install-thrift.sh 
 
-FROM maven:3.5.0-jdk-8-alpine
+FROM maven:3.6.3-jdk-11
 
-COPY --from=0 /usr/local/bin/thrift /usr/local/bin/thrift 
+RUN apt-get update && apt-get install -y libfl-dev
+
+COPY --from=0 /usr/local/bin/thrift /usr/local/bin/thrift
 
