@@ -13,11 +13,22 @@ services:
     build: ./maven-thrift
     image: sw360/maven-thrift:latest
     command: "true"
-  sw360backend:
+  sw360backend-thrift:
     build: ./backend
     image: sw360/backend:latest  
     depends_on:
       - sw360couchdb
+    environment:
+      COUCHDB_URL: 'http://sw360couchdb:5984'
+      COUCHDB_USER: 'sw360'
+      COUCHDB_PASSWORD: 'sw360'
+    ports:
+      - 8090:8080
+  sw360backend-rest:
+    build: ./rest
+    image: sw360/rest:latest
+    depends_on:
+      - sw360backend-thrift
     environment:
       COUCHDB_URL: 'http://sw360couchdb:5984'
       COUCHDB_USER: 'sw360'
