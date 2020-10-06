@@ -8,22 +8,27 @@
 
 version: '3.5'
 
+volumes:
+  SW360CouchDBVolume:
+
 services:
   maven-thrift:
     build: ./maven-thrift
     image: sw360/maven-thrift:latest
     command: "true"
+
   sw360backend-thrift:
     build: ./backend
     image: sw360/backend:latest  
     depends_on:
-      - sw360couchdb
+      - start_dependencies
     environment:
       COUCHDB_URL: 'http://sw360couchdb:5984'
       COUCHDB_USER: 'sw360'
       COUCHDB_PASSWORD: 'sw360'
     ports:
       - 8090:8080
+
   sw360backend-rest:
     build: ./rest
     image: sw360/rest:latest
@@ -35,6 +40,7 @@ services:
       COUCHDB_PASSWORD: 'sw360'
     ports:
       - 8080:8080
+
   sw360couchdb:
     build: ./couchdb
     image: sw360/couchdb:latest   
@@ -44,7 +50,10 @@ services:
       COUCHDB_PASSWORD: 'sw360'
     ports:
       - 5984:5984
-  sw360couchdb-lucene:   
+    volumes:
+      - "SW360CouchDBVolume:/opt/couchdb/data"
+
+  sw360couchdb-lucene:
     build: ./couchdb-lucene
     image: sw360/couchdb-lucene:latest
     depends_on:
@@ -53,3 +62,9 @@ services:
       COUCHDB_HOST: 'sw360couchdb'
       COUCHDB_USER: 'sw360'
       COUCHDB_PASSWORD: 'sw360'
+
+  start_dependencies:
+    image: dadarek/wait-for-dependencies
+    depends_on:
+      - sw360couchdb
+    command: sw360couchdb:5984
