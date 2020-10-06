@@ -20,9 +20,9 @@ do
   echo repacking $i ...
   rm -rf $i 
   mkdir $i 
-  cd $i 
-  unzip -q ../$i.war
-  find WEB-INF/lib ! \( -name "*${i}*"  -o -name "*commonIO-*" -o -name "*datahandler-*" -o -name "*src-vulnerabilities-*" -o -name "*src-attachments-*" -o -name "*exporters-*" -o -name "*licenses-*" -o -name "*-common-*" -o -name "*build-configuration-*"   \) -type f -exec mv {}  ../libs/  \;
+  cd $i && unzip -q ../$i.war
+  mv WEB-INF/lib/* ../libs/
+  rmdir WEB-INF/lib
   zip -q -r ../slim-wars/$i.war .
   cd ..
   rm -rf $i
