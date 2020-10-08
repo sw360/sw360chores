@@ -64,6 +64,7 @@ services:
       COUCHDB_URL: 'http://sw360couchdb:5984'
       COUCHDB_USER: 'sw360'
       COUCHDB_PASSWORD: 'sw360'
+      COUCHDB_LUCENE_URL: 'http://sw360couchdb-lucene:5985'
     ports:
       - 8090:8080
 
