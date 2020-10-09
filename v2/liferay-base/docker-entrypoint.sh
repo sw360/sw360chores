@@ -211,6 +211,7 @@ DB_TYPE="$DB_TYPE" CATALINA_OPTS="$CATALINA_OPTS" /opt/sw360/tomcat/bin/startup.
 HOME_DIR=/opt/sw360
 ARTIFACT_DIR=$HOME_DIR/artifacts
 CHECKSUM_DIR=$HOME_DIR/data/checksums
+mkdir -p $ARTIFACT_DIR
 mkdir -p $CHECKSUM_DIR
 DEPLOYED_CHECKSUM=0
 if [ -f $CHECKSUM_DIR/deployed.md5 ]; then

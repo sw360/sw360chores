@@ -10,23 +10,23 @@ version: '3.5'
 
 secrets:
   POSTGRES_PASSWORD:
-    file: ../../configuration/POSTGRES_PASSWORD
+    file: ../configuration/POSTGRES_PASSWORD
   COUCHDB_USER:
-    file: ../../configuration/COUCHDB_USER
+    file: ../configuration/COUCHDB_USER
   COUCHDB_PASSWORD:
-    file: ../../configuration/COUCHDB_PASSWORD
+    file: ../configuration/COUCHDB_PASSWORD
   nginx_key:
-    file: ../../configuration/nginx/nginx.key
+    file: ../configuration/nginx/nginx.key
   nginx_pem:
-    file: ../../configuration/nginx/nginx.pem
+    file: ../configuration/nginx/nginx.pem
   nginx_fifo:
-    file: ../../configuration/nginx/nginx.fifo
+    file: ../configuration/nginx/nginx.fifo
   fossology.id_rsa:
-    file: ../../configuration/sw360/fossology/fossology.id_rsa
+    file: ../configuration/sw360/fossology/fossology.id_rsa
   fossology.id_rsa.pub:
-    file: ../../configuration/sw360/fossology/fossology.id_rsa.pub
+    file: ../configuration/sw360/fossology/fossology.id_rsa.pub
   certificates:
-    file: ../../configuration/certificates
+    file: ../configuration/certificates
 
 volumes:
   SW360TomcatVolume:
@@ -52,7 +52,7 @@ services:
 
   maven-thrift:
     build:
-      context: ./maven-thrift
+      context: maven-thrift
       args:
         - sw360_tag=${sw360_tag}
     image: sw360/maven-thrift:latest
@@ -60,7 +60,7 @@ services:
 
   sw360backend-thrift:
     build:
-      context: ./backend
+      context: backend
       args:
         - sw360_tag=${sw360_tag}
     image: sw360/backend:latest  
@@ -77,7 +77,7 @@ services:
 
   sw360backend-rest:
     build:
-      context: ./rest
+      context: rest
       args:
         - sw360_tag=${sw360_tag}
     image: sw360/rest:latest
@@ -92,7 +92,7 @@ services:
       - 8080:8080
 
   sw360couchdb:
-    build: ./couchdb
+    build: couchdb
     image: sw360/couchdb:latest   
     environment:
       COUCHDB_LUCENE_HOST: 'sw360couchdb-lucene'
@@ -105,7 +105,7 @@ services:
       - "SW360CouchDBVolume:/opt/couchdb/data"
 
   sw360couchdb-lucene:
-    build: ./couchdb-lucene
+    build: couchdb-lucene
     image: sw360/couchdb-lucene:latest
     depends_on:
       - sw360couchdb
@@ -131,7 +131,7 @@ services:
       - FOSSOLOGY_PORT=
       - SW360_THRIFT_BACKEND=http://sw360backend-thrift:8080
     env_file:
-      - ../../configuration/sw360/sw360.env
+      - ../configuration/sw360/sw360.env
     secrets:
       - fossology.id_rsa
       - fossology.id_rsa.pub
