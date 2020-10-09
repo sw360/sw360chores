@@ -51,12 +51,18 @@ services:
       - nginx_fifo
 
   maven-thrift:
-    build: ./maven-thrift
+    build:
+      context: ./maven-thrift
+      args:
+        - sw360_tag=${sw360_tag}
     image: sw360/maven-thrift:latest
     command: "true"
 
   sw360backend-thrift:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        - sw360_tag=${sw360_tag}
     image: sw360/backend:latest  
     depends_on:
       - sw360couchdb
@@ -70,7 +76,10 @@ services:
       - 8090:8080
 
   sw360backend-rest:
-    build: ./rest
+    build:
+      context: ./rest
+      args:
+        - sw360_tag=${sw360_tag}
     image: sw360/rest:latest
     depends_on:
       - sw360backend-thrift
