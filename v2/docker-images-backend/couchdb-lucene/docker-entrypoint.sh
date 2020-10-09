@@ -10,6 +10,15 @@
 
 set -e
 
+COUCHDB_USER_FILE=/run/secrets/COUCHDB_USER
+if [ -f "$COUCHDB_USER_FILE" ]; then
+    export COUCHDB_USER=$(cat "$COUCHDB_USER_FILE")
+fi
+COUCHDB_PASSWORD_FILE=/run/secrets/COUCHDB_PASSWORD
+if [ -f "$COUCHDB_PASSWORD_FILE" ]; then
+    export COUCHDB_PASSWORD=$(cat "$COUCHDB_PASSWORD_FILE")
+fi
+
 if [ ! "$COUCHDB_HOST" ]; then
     echo "the environmental variable \$COUCHDB_HOST must be set"
     exit 1

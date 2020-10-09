@@ -62,9 +62,10 @@ services:
       - sw360couchdb
     environment:
       COUCHDB_URL: 'http://sw360couchdb:5984'
-      COUCHDB_USER: 'sw360'
-      COUCHDB_PASSWORD: 'sw360'
       COUCHDB_LUCENE_URL: 'http://sw360couchdb-lucene:5985'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
     ports:
       - 8090:8080
 
@@ -75,8 +76,9 @@ services:
       - sw360backend-thrift
     environment:
       COUCHDB_URL: 'http://sw360couchdb:5984'
-      COUCHDB_USER: 'sw360'
-      COUCHDB_PASSWORD: 'sw360'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
     ports:
       - 8080:8080
 
@@ -85,8 +87,9 @@ services:
     image: sw360/couchdb:latest   
     environment:
       COUCHDB_LUCENE_HOST: 'sw360couchdb-lucene'
-      COUCHDB_USER: 'sw360'
-      COUCHDB_PASSWORD: 'sw360'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
     ports:
       - 5984:5984
     volumes:
@@ -99,8 +102,9 @@ services:
       - sw360couchdb
     environment:
       COUCHDB_HOST: 'sw360couchdb'
-      COUCHDB_USER: 'sw360'
-      COUCHDB_PASSWORD: 'sw360'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
 
   sw360liferay:
     image: sw360/sw360populated
