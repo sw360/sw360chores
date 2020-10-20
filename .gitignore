@@ -4,9 +4,9 @@ _*
 *.tar
 *.zip
 *.deb
-*.zip
 *.rpm
 .idea
 *.war
 /miscellaneous/prepare-liferay/downloads
 /configuration/proxy.env
+build/
