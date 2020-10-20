@@ -117,9 +117,18 @@ services:
       - COUCHDB_USER
       - COUCHDB_PASSWORD
 
+  sw360base:
+    build: liferay-base
+    image: sw360/sw360empty
+
   sw360liferay:
+    build:
+      context: liferay-360
+      args:
+        - sw360_tag=${sw360_tag}
     image: sw360/sw360populated
     depends_on:
+      - sw360base
       - sw360postgres
       - sw360couchdb
       - maven-thrift

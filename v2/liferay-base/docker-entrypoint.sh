@@ -8,6 +8,10 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
+# Base image for SW360 Liferay container.
+# This image constructs the Liferay Tomcat container without the SW360
+# artifacts. Derived images can obtain the artifacts from different sources.
+
 # the used / parsed environmental variables are:
 #
 # for liferay
@@ -45,6 +49,14 @@
 #    /portal-ext.properties
 
 set -e
+
+SW360_DIR=/sw360chores
+# Check whether this is the base image. It is started by the docker-compose
+# script, but has no content to be executed.
+if [ ! -d "$SW360_DIR" ] || [ -z "$(ls -A "$SW360_DIR")" ]; then
+  echo "Exiting empty base image."
+  exit 0
+fi
 
 ################################################################################
 # Setup JAVA_OPTS
@@ -221,7 +233,7 @@ if [ "$(ls -A $ARTIFACT_DIR)" ]; then
   echo "Deploying artifacts from $ARTIFACT_DIR"
 else
   echo "Deploying original artifacts."
-  cp /sw360chores/* $ARTIFACT_DIR/
+  cp $SW360_DIR/* $ARTIFACT_DIR/
 fi
 
 md5sum $ARTIFACT_DIR/* > $CHECKSUM_DIR/checksums.md5
