@@ -18,4 +18,19 @@ fi
 
 envsubst < /etc/sw360/couchdb.properties.template > /etc/sw360/couchdb.properties
 
+# Check if couchdb system databases are present and create then if necessary
+response=$(curl --noproxy '*' $COUCHDB_URL/_users)
+echo "Response from CURL: $response"
+case $response in
+  *"Database does not exist."*)
+    echo "Creating CouchDB system databases."
+    curl -X PUT --user $COUCHDB_USER:$COUCHDB_PASSWORD --noproxy '*' $COUCHDB_URL/_users
+    curl -X PUT --user $COUCHDB_USER:$COUCHDB_PASSWORD --noproxy '*' $COUCHDB_URL/_replicator
+    curl -X PUT --user $COUCHDB_USER:$COUCHDB_PASSWORD --noproxy '*' $COUCHDB_URL/_global_changes
+    ;;
+  *)
+    echo "CouchDB system databases already initialized."
+    ;;
+esac
+
 exec catalina.sh run

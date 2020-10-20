@@ -10,9 +10,11 @@
 
 COUCH_HOME=/opt/couchdb
 COUCH_DATA=$COUCH_HOME/data
+COUCH_INI=$COUCH_HOME/etc/local.ini
 
+sed -i -r 's/\[couchdb\]/[couchdb]\nsingle_node=true/' $COUCH_INI
 if [ "$COUCHDB_LUCENE_HOST" ]; then
-    sed -i -r 's/\[httpd_global_handlers\]/[httpd_global_handlers]\n_fti = {couch_httpd_proxy, handle_proxy_req, <<"http:\/\/'"$COUCHDB_LUCENE_HOST"':5985">>}/' $COUCH_HOME/etc/local.ini
+    sed -i -r 's/\[httpd_global_handlers\]/[httpd_global_handlers]\n_fti = {couch_httpd_proxy, handle_proxy_req, <<"http:\/\/'"$COUCHDB_LUCENE_HOST"':5985">>}/' $COUCH_INI
 fi
 
 if [ "$(ls -A $COUCH_DATA)" ]; then
