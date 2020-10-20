@@ -35,6 +35,8 @@ volumes:
 
 services:
   sw360nginx:
+    build:
+      context: sw360nginx
     image: sw360/sw360nginx
     restart: unless-stopped
     ports:
