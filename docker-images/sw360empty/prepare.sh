@@ -10,7 +10,7 @@
 
 set -e
 cd "$(dirname "${BASH_SOURCE[0]}" )"
-TARGET="sw360-liferay-7.2.0-GA1.tar.gz"
+TARGET="sw360-liferay-7.3.3-ga4.tar.gz"
 
 if [ ! -f "$TARGET" ]; then
     ../../miscellaneous/prepare-liferay/prepare.sh

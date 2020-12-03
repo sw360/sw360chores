@@ -11,9 +11,9 @@
 set -e
 cd "$(dirname "${BASH_SOURCE[0]}" )"
 DIR="$(pwd)"
-TARGET="sw360-liferay-7.2.0-GA1.tar.gz"
-LIFERAY="liferay-ce-portal-tomcat-7.2.0-ga1-20190531153709761.tar.gz"
-LIFERAY_CHECKSUM="e68ab5dae19063924ae8d7e7ea0078fa"
+TARGET="sw360-liferay-7.3.3-ga4.tar.gz"
+LIFERAY="liferay-ce-portal-tomcat-7.3.3-ga4-20200701015330959.tar.gz"
+LIFERAY_CHECKSUM="34904d3aae3b60a658189b5b513e738c"
 
 function downloadModule {
     URL="$1"
@@ -42,7 +42,7 @@ if [ ! -f "$TARGET" ]; then
 
     if [ ! -f "$LIFERAY" ]; then
         echo "... start downloading $LIFERAY (this can take some time)"
-        curl -OsLC - 'https://downloads.sourceforge.net/project/lportal/Liferay%20Portal/7.2.0%20GA1/'"$LIFERAY"
+        curl -OsLC - 'https://sourceforge.net/projects/lportal/files/Liferay%20Portal/7.3.3%20GA4/'"$LIFERAY"
     else
         echo "... the file $LIFERAY already exists and does not need to be downloaded again"
     fi
@@ -70,6 +70,7 @@ if [ ! -f "$TARGET" ]; then
     downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/2.9.8/jackson-annotations-2.9.8.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/2.9.8/jackson-core-2.9.8.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/2.9.8/jackson-databind-2.9.8.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/thrift/libthrift/0.13.0/libthrift-0.13.0.jar"
 
     cd ../..
 

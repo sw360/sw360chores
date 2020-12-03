@@ -6,15 +6,16 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM java:openjdk-8-jre-alpine
+FROM openjdk:11-jre-slim
 MAINTAINER admin@sw360.org
 
 WORKDIR /
 ADD ./couchdb-lucene-2.1.0-dist.zip /
 RUN set -ex \
- && apk add --update unzip \
+ && apt-get update \
+ && apt-get install -y unzip \
  && unzip /couchdb-lucene-2.1.0-dist.zip \
- && apk del unzip \
+ && apt-get remove -y unzip \
  && mv /couchdb-lucene-2.1.0 /couchdb-lucene
 
 EXPOSE 5985

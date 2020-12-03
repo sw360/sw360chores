@@ -135,12 +135,16 @@ fi
 echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/couchdb.properties
 echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/authorization/application.properties
 
+COUCHDB_URL="http://${COUCHDB_HOST}:5984"
+COUCHDB_USER="admin"
+
 COUCHDB_USER_FILE=/run/secrets/COUCHDB_USER
 if [ -f "$COUCHDB_USER_FILE" ]; then
     COUCHDB_USER=$(cat "$COUCHDB_USER_FILE")
     if [ "$COUCHDB_USER" ]; then
         echo "couchdb.user = $COUCHDB_USER" >> /etc/sw360/couchdb.properties
         echo "couchdb.username = $COUCHDB_USER" >> /etc/sw360/authorization/application.properties
+        COUCHDB_URL="http://${COUCHDB_USER}@${COUCHDB_HOST}:5984"
     fi
 fi
 
@@ -150,8 +154,24 @@ if [ -f "$COUCHDB_PASSWORD_FILE" ]; then
     if [ "$COUCHDB_PASSWORD" ]; then
         echo "couchdb.password = $COUCHDB_PASSWORD" >> /etc/sw360/couchdb.properties
         echo "couchdb.password = $COUCHDB_PASSWORD" >> /etc/sw360/authorization/application.properties
+        COUCHDB_URL="http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_HOST}:5984"
     fi
 fi
+
+echo "DEBUG: Waiting for CouchDB to be up..."
+echo "DEBUG: curl --output /dev/null --silent --head --fail ${COUCHDB_URL}/_up"
+until $(curl --output /dev/null --silent --head --fail ${COUCHDB_URL}/_up); do
+    printf '.'
+    sleep 3
+done
+
+# Create system tables (no longer created by default since version 2.0.0)
+echo "DEBUG: curl -X PUT ${COUCHDB_URL}/_users"
+curl --silent -X PUT "${COUCHDB_URL}/_users"
+echo "DEBUG: curl -X PUT ${COUCHDB_URL}/_replicator"
+curl --silent -X PUT "${COUCHDB_URL}/_replicator"
+echo "DEBUG: curl -X PUT ${COUCHDB_URL}/_global_changes"
+curl --silent -X PUT "${COUCHDB_URL}/_global_changes"
 
 
 

@@ -36,8 +36,8 @@ if [[ "$CLEANUP" == true ]]; then
 fi
 
 if [ ! -f "$DIR/$TARGET" ]; then
-    if [[ -f $DIR/../../proxy.env ]]; then
-        source $DIR/../../proxy.env
+    if [[ -f $DIR/../../configuration/proxy.env ]]; then
+        source $DIR/../../configuration/proxy.env
     fi
 
     ################################################################################
@@ -47,7 +47,7 @@ if [ ! -f "$DIR/$TARGET" ]; then
     git clone --branch $BRANCH --depth 1 https://github.com/rnewson/couchdb-lucene "$TMP/couchdb-lucene.git"
 
     cmdMvn="mvn -DskipTests "
-    if [ "$NET_HOST" -eq false ] || [ "$NO_DOCKER" -eq true ]; then
+    if [ "$NET_HOST" == false ] || [ "$NO_DOCKER" == true ]; then
       cmdMvn="$cmdMvn -Dhttp.proxyHost=$proxy_host -Dhttp.proxyPort=$proxy_port -Dhttps.proxyHost=$proxy_host -Dhttps.proxyPort=$proxy_port -Dhttp.nonProxyHosts=localhost"
     fi
     echo "DEBUG: $cmdMvn"
@@ -68,14 +68,14 @@ if [ ! -f "$DIR/$TARGET" ]; then
           paramHost="--net=host"
         fi
         cmdDocker="$(addSudoIfNeeded) docker"
-        $cmdDocker pull maven:3-jdk-8-alpine
+        $cmdDocker pull maven:3.6.3-jdk-11-slim
         $cmdDocker run -i \
                    --cap-drop=all --user "${UID}" \
                    -v "$TMP/couchdb-lucene.git:/couchdb-lucene" \
                    --env MAVEN_CONFIG=/tmp/ \
                    -w /couchdb-lucene \
                    $paramHost \
-                   maven:3-jdk-8-alpine \
+                   maven:3.6.3-jdk-11-slim \
                    $cmdMvn -Dmaven.repo.local=/tmp/m2/repository
     fi
     cp "$TMP/couchdb-lucene.git/target/$TARGET" "$DIR"

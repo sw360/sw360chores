@@ -6,11 +6,12 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM couchdb:1.7.1
+FROM couchdb:2.1
 MAINTAINER admin@sw360.org
 
 RUN mkdir /initial-data
 
+COPY local-single-node.ini /usr/local/etc/couchdb/local.ini
 COPY docker-entrypoint.overlay.sh /docker-entrypoint.overlay.sh
 run chmod +x /docker-entrypoint.overlay.sh \
  && mkdir -p /usr/local/etc/couchdb/
