@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright Bosch Software Innovations GmbH, 2019.
+# Copyright Bosch.IO GmbH 2020.
 # Part of the SW360 Portal Project.
 #
 # All rights reserved. This program and the accompanying materials
@@ -8,7 +8,7 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-set -e 
+set -e
 
 rm -rf libs
 mkdir libs
@@ -20,11 +20,10 @@ do
   echo repacking $i ...
   rm -rf $i 
   mkdir $i 
-  cd $i 
-  unzip -q ../$i.war
-  find WEB-INF/lib ! \( -name "*${i}*"  -o -name "*commonIO-*" -o -name "*datahandler-*" -o -name "*src-vulnerabilities-*" -o -name "*src-attachments-*" -o -name "*exporters-*" -o -name "*licenses-*" -o -name "*-common-*" -o -name "*build-configuration-*"   \) -type f -exec mv {}  ../libs/  \;
+  cd $i && unzip -q ../$i.war
+  mv WEB-INF/lib/* ../libs/
+  rmdir WEB-INF/lib
   zip -q -r ../slim-wars/$i.war .
   cd ..
-  rm -rf $i
   echo done
 done

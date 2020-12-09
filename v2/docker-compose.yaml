@@ -1,0 +1,172 @@
+# Copyright Bosch Software Innovations GmbH, 2019.
+# Part of the SW360 Portal Project.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+
+version: '3.5'
+
+secrets:
+  POSTGRES_PASSWORD:
+    file: ../configuration/POSTGRES_PASSWORD
+  COUCHDB_USER:
+    file: ../configuration/COUCHDB_USER
+  COUCHDB_PASSWORD:
+    file: ../configuration/COUCHDB_PASSWORD
+  nginx_key:
+    file: ../configuration/nginx/nginx.key
+  nginx_pem:
+    file: ../configuration/nginx/nginx.pem
+  nginx_fifo:
+    file: ../configuration/nginx/nginx.fifo
+  fossology.id_rsa:
+    file: ../configuration/sw360/fossology/fossology.id_rsa
+  fossology.id_rsa.pub:
+    file: ../configuration/sw360/fossology/fossology.id_rsa.pub
+  certificates:
+    file: ../configuration/certificates
+
+volumes:
+  SW360TomcatVolume:
+  SW360CouchDBVolume:
+  SW360PostgresVolume:
+
+services:
+  sw360nginx:
+    build:
+      context: sw360nginx
+    image: sw360/sw360nginx
+    restart: unless-stopped
+    ports:
+      - ${SW360_NGINX_PORT:-8443}:8443
+    depends_on:
+      - sw360liferay
+    environment:
+      - HOST=sw360liferay
+      - HOST_PORT=8080
+      - RESTRICTED_URLS=manager|attachments|bdpimport|components|cvesearch|fossology|layouttpl|licenseinfo|licenses|moderation|projects|schedule|search|users|vendors|vulnerabilities
+    secrets:
+      - nginx_key
+      - nginx_pem
+      - nginx_fifo
+
+  maven-thrift:
+    build:
+      context: maven-thrift
+      args:
+        - sw360_tag=${sw360_tag}
+    image: sw360/maven-thrift:latest
+    command: "true"
+
+  sw360backend-thrift:
+    build:
+      context: backend
+      args:
+        - sw360_tag=${sw360_tag}
+    image: sw360/backend:latest  
+    depends_on:
+      - sw360couchdb
+    environment:
+      COUCHDB_URL: 'http://sw360couchdb:5984'
+      COUCHDB_LUCENE_URL: 'http://sw360couchdb-lucene:5985'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
+    ports:
+      - 8090:8080
+
+  sw360backend-rest:
+    build:
+      context: rest
+      args:
+        - sw360_tag=${sw360_tag}
+    image: sw360/rest:latest
+    depends_on:
+      - sw360backend-thrift
+    environment:
+      COUCHDB_URL: 'http://sw360couchdb:5984'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
+    ports:
+      - 8080:8080
+
+  sw360couchdb:
+    build: couchdb
+    image: sw360/couchdb:latest   
+    environment:
+      COUCHDB_LUCENE_HOST: 'sw360couchdb-lucene'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
+    ports:
+      - 5984:5984
+    volumes:
+      - "SW360CouchDBVolume:/opt/couchdb/data"
+
+  sw360couchdb-lucene:
+    build: couchdb-lucene
+    image: sw360/couchdb-lucene:latest
+    depends_on:
+      - sw360couchdb
+    environment:
+      COUCHDB_HOST: 'sw360couchdb'
+    secrets:
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
+
+  sw360base:
+    build: liferay-base
+    image: sw360/sw360empty
+
+  sw360liferay:
+    build:
+      context: liferay-360
+      args:
+        - sw360_tag=${sw360_tag}
+    image: sw360/sw360populated
+    depends_on:
+      - sw360base
+      - sw360postgres
+      - sw360couchdb
+      - maven-thrift
+    environment:
+      - POSTGRES_USER=sw360
+      - POSTGRES_HOST=sw360postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
+      - COUCHDB_HOST=sw360couchdb
+      - FOSSOLOGY_USER=
+      - FOSSOLOGY_HOST=
+      - FOSSOLOGY_PORT=
+      - SW360_THRIFT_BACKEND=http://sw360backend-thrift:8080
+    env_file:
+      - ../configuration/sw360/sw360.env
+    secrets:
+      - fossology.id_rsa
+      - fossology.id_rsa.pub
+      - POSTGRES_PASSWORD
+      - COUCHDB_USER
+      - COUCHDB_PASSWORD
+      - certificates
+    volumes:
+      - "SW360TomcatVolume:/opt/sw360"
+
+  sw360postgres:
+    image: postgres:11
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=sw360pgdb
+      - POSTGRES_USER=sw360
+      - POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
+    secrets:
+      - POSTGRES_PASSWORD
+    volumes:
+      - "SW360PostgresVolume:/var/lib/postgresql/data"
+
+  start_dependencies:
+    image: dadarek/wait-for-dependencies
+    depends_on:
+      - sw360couchdb
+    command: sw360couchdb:5984

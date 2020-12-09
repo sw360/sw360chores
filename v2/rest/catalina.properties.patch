@@ -1,0 +1,100 @@
+# Copyright Bosch Software Innovations GmbH, 2019.
+# Part of the SW360 Portal Project.
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+
+--- catalina.properties	2019-02-27 21:38:55.297749700 +0100
++++ catalina.properties	2019-02-27 21:35:55.043246200 +0100
+@@ -87,7 +87,7 @@
+ #       ${catalina.base} path or the ${catalina.home} path contains a comma.
+ #       Because double quotes are used for quoting, the double quote character
+ #       may not appear in a path.
+-shared.loader=
++shared.loader=shared/*.jar
+ 
+ # Default list of JAR files that should not be scanned using the JarScanner
+ # functionality. This is typically used to scan JARs for configuration
+@@ -191,7 +191,79 @@
+ xml-apis.jar,\
+ xmlParserAPIs-*.jar,\
+ xmlParserAPIs.jar,\
+-xom-*.jar
++xom-*.jar,\
++activation-*.jar, \
++annotations-*.jar, \
++antlr-*.jar, \
++antlr-*.jar, \
++antlr-runtime-*.jar, \
++arq-*.jar, \
++asm-*.jar, \
++cglib-*.jar, \
++commons-beanutils-*.jar, \
++commons-codec-*.jar, \
++commons-collections-*.jar, \
++commons-collections*.jar, \
++commons-csv-*.jar, \
++commons-digester*.jar, \
++commons-io-*.jar, \
++commons-lang-*.jar, \
++commons-lang3-*.jar, \
++commons-logging-*.jar, \
++compiler*.jar, \
++curvesapi-*.jar, \
++ektorplucene-*.jar, \
++findbugs-annotations-*.jar, \
++gson-*.jar, \
++guava-*.jar, \
++htmlparser-*.jar, \
++httpclient-*.jar, \
++httpclient-cache-*.jar, \
++httpcore-*.jar, \
++icu4j-*.jar, \
++iri-*.jar, \
++jackson-annotations-*.jar, \
++jackson-core-*.jar, \
++jackson-databind-*.jar, \
++JavaEWAH-*.jar, \
++java-rdfa-*.jar, \
++jcl-over-slf4j-*.jar, \
++jena-*.jar, \
++joda-time-*.jar, \
++jsch-*.jar, \
+++json-simple-*.jar, \
++jsoup-*.jar, \
++libthrift-*.jar, \
++log4j-*.jar, \
++lucene-core-*.jar, \
++mail-*.jar, \
++opencsv-*.jar, \
++org.eclipse.jgit-*.jar, \
++org.ektorp-*.jar, \
++poi-*.jar, \
++poi-*.jar, \
++poi-ooxml-*.jar, \
++poi-ooxml-schemas-*.jar, \
++saxon-*.jar, \
++saxon-dom-*.jar, \
++slf4j-api-*.jar, \
++slf4j-log4j12-*.jar, \
++spdx-tools-*.jar, \
++spring-aop-*.RELEASE.jar, \
++spring-beans-*.RELEASE.jar, \
++spring-context-*.RELEASE.jar, \
++spring-core-*.RELEASE.jar, \
++spring-expression-*.RELEASE.jar, \
++spring-web-*.RELEASE.jar, \
++spring-webmvc-*.RELEASE.jar, \
++ST4-*.jar, \
++stax-api-*.jar, \
++stringtemplate-*.jar, \
++velocity-engine-core-*.jar, \
++velocity-tools-generic-*.jar, \
++wstx-asl-*.jar, \
++xercesImpl-*.jar, \
++xmlbeans-*.jar
+ 
+ # Default list of JAR files that should be scanned that overrides the default
+ # jarsToSkip list above. This is typically used to include a specific JAR that

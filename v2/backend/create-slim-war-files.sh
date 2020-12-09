@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright Bosch Software Innovations GmbH, 2019.
 # Part of the SW360 Portal Project.
 #
@@ -6,13 +8,23 @@
 # which accompanies this distribution, and is available at
 # http://www.eclipse.org/legal/epl-v10.html
 
-FROM couchdb:1.7.1
-MAINTAINER admin@sw360.org
+set -e 
 
-RUN mkdir /initial-data
-
-COPY docker-entrypoint.overlay.sh /docker-entrypoint.overlay.sh
-run chmod +x /docker-entrypoint.overlay.sh \
- && mkdir -p /usr/local/etc/couchdb/
-ENTRYPOINT ["tini", "--", "/docker-entrypoint.overlay.sh"]
-CMD ["couchdb"]
+rm -rf libs
+mkdir libs
+rm -rf slim-wars
+mkdir slim-wars
+for i in $(ls *.war)
+do
+  i=${i%.war}
+  echo repacking $i ...
+  rm -rf $i 
+  mkdir $i 
+  cd $i && unzip -q ../$i.war
+  mv WEB-INF/lib/* ../libs/
+  rmdir WEB-INF/lib
+  zip -q -r ../slim-wars/$i.war .
+  cd ..
+  rm -rf $i
+  echo done
+done
