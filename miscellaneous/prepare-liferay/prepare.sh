@@ -60,16 +60,16 @@ if [ ! -f "$TARGET" ]; then
     cd modules
 
     downloadModule "https://search.maven.org/remotecontent?filepath=commons-codec/commons-codec/1.12/commons-codec-1.12.jar"
-    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/commons/commons-collections4/4.1/commons-collections4-4.1.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/commons/commons-collections4/4.4/commons-collections4-4.4.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/commons/commons-csv/1.4/commons-csv-1.4.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=commons-io/commons-io/2.6/commons-io-2.6.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=commons-lang/commons-lang/2.4/commons-lang-2.4.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=commons-logging/commons-logging/1.2/commons-logging-1.2.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=com/google/code/gson/gson/2.8.5/gson-2.8.5.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=com/google/guava/guava/21.0/guava-21.0.jar"
-    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/2.9.8/jackson-annotations-2.9.8.jar"
-    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/2.9.8/jackson-core-2.9.8.jar"
-    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/2.9.8/jackson-databind-2.9.8.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/2.11.3/jackson-annotations-2.11.3.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/2.11.3/jackson-core-2.11.3.jar"
+    downloadModule "https://search.maven.org/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/2.11.3/jackson-databind-2.11.3.jar"
     downloadModule "https://search.maven.org/remotecontent?filepath=org/apache/thrift/libthrift/0.13.0/libthrift-0.13.0.jar"
 
     cd ../..

@@ -11,7 +11,6 @@ MAINTAINER admin@sw360.org
 
 RUN mkdir /initial-data
 
-COPY local-single-node.ini /usr/local/etc/couchdb/local.ini
 COPY docker-entrypoint.overlay.sh /docker-entrypoint.overlay.sh
 run chmod +x /docker-entrypoint.overlay.sh \
  && mkdir -p /usr/local/etc/couchdb/

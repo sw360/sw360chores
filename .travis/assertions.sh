@@ -61,7 +61,7 @@ assertCouchdb () {
 assertCouchdbViaHTTP () {
     echo "assert that CouchDB answers over HTTP"
     testUrlWithSearchString "http://localhost:5984" "\"couchdb\":\"Welcome\""
-    testUrlWithSearchString "http://localhost:5984/_utils/" "<title>Overview</title>"
+    testUrlWithSearchString "http://localhost:5984/_utils/" "Fauxton"
 }
 
 assertNoCouchdbPort () {

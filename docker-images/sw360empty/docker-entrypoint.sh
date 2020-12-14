@@ -134,6 +134,9 @@ if [ ! "$COUCHDB_HOST" ]; then
 fi
 echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/couchdb.properties
 echo "couchdb.url = http://${COUCHDB_HOST}:5984" > /etc/sw360/authorization/application.properties
+# Since CouchDB 2.x Lucene must be accessed directly
+echo "couchdb.lucene.url = http://${COUCHDB_LUCENE_HOST}:5985" >> /etc/sw360/couchdb.properties
+echo "couchdb.lucene.url = http://${COUCHDB_LUCENE_HOST}:5985" >> /etc/sw360/authorization/application.properties
 
 COUCHDB_URL="http://${COUCHDB_HOST}:5984"
 COUCHDB_USER="admin"
