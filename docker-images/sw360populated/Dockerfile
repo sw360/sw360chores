@@ -11,6 +11,8 @@ FROM sw360/sw360empty:latest
 COPY _deploy/tomcat/* /opt/sw360/deploy/tomcat/
 COPY _deploy/liferay/* /opt/sw360/deploy/liferay/
 
+RUN apt-get update && apt-get install -y unzip
+
 RUN set -ex \
  && for war in /opt/sw360/deploy/tomcat/*.war; do \
       folder=$(basename $war .war); \
