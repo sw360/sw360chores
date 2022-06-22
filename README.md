@@ -1,5 +1,11 @@
 # SW360 chores
 
+---------------
+### This repo is currently outdated 
+![](https://img.shields.io/badge/status-outdated-red.svg) There is an official docker deployment in [SW360 Page](https://github.com/eclipse/sw360/blob/master/README_DOCKER.md)
+
+---------------
+
 This repository contains code which sets up a Docker based deployment and development infrastructure for [SW360](https://github.com/eclipse/sw360).
 It simplifies and abstracts the configuration.
 It also contains tools for backing up and restoring of container states as well as for exporting and importing docker images.
